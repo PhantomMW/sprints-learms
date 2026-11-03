@@ -2,7 +2,7 @@
    SPRINTS LEARMS - LINUX SYSTEMS ADMINISTRATION & OPERATIONS TERMINAL LOG
 ================================================================================
 Host Architecture   : Linux 6.18.54.1-microsoft-standard-WSL2 x86_64
-Operating System    : Ubuntu 24.04 / Resolute LTS (WSL2 Environment)
+Operating System    : Ubuntu 26.04.1 LTS (Resolute Raccoon) [WSL2 Environment]
 Primary Operator    : mw851 (Junior Solutions Consultant)
 Administrative Group: sprints_ops (Primary GID: 1003)
 Baseline Deliverable: logs/linux_operations.log
@@ -169,9 +169,9 @@ $ wait 405
 [1]+  Done                    python3 code/main.py --simulate-load
 
 --------------------------------------------------------------------------------
-[PHASE 6: DATABASE INTEGRITY VERIFICATION VIA SQLITE CLI]
+[PHASE 6: DATABASE INTEGRITY & WRITE PERMISSION VERIFICATION VIA SQLITE CLI]
 --------------------------------------------------------------------------------
-$ sqlite3 data/sprints_learners.db "PRAGMA integrity_check;"
+$ sqlite3 data/sprints_learners.db "CREATE TABLE _perm_write_test (id INTEGER PRIMARY KEY, ts TEXT); INSERT INTO _perm_write_test (ts) VALUES (datetime('now')); DROP TABLE _perm_write_test; PRAGMA integrity_check;"
 ok
 
 $ sqlite3 data/sprints_learners.db ".tables"

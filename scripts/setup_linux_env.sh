@@ -120,12 +120,17 @@ su - "$TARGET_USER" -c "
     cd '$APP_ROOT'
     # Test file write to logs
     touch logs/.perm_test && rm logs/.perm_test
-    # Verify sqlite database read & integrity check
+    # Verify sqlite database actual write permission via temporary table transaction
     if [ -f data/sprints_learners.db ]; then
-        sqlite3 data/sprints_learners.db 'PRAGMA integrity_check;'
+        sqlite3 data/sprints_learners.db '
+            CREATE TABLE IF NOT EXISTS _perm_write_test (id INTEGER PRIMARY KEY, ts TEXT);
+            INSERT INTO _perm_write_test (ts) VALUES (datetime(\"now\"));
+            DROP TABLE _perm_write_test;
+            PRAGMA integrity_check;
+        '
     fi
 "
-echo "[SUCCESS] Non-root operator '$TARGET_USER' successfully verified with full read/write access."
+echo "[SUCCESS] Non-root operator '$TARGET_USER' successfully verified with full read/write access (SQLite write transaction verified)."
 echo "================================================================="
 echo "   LINUX ENVIRONMENT SETUP & SECURITY PROVISIONING COMPLETE      "
 echo "================================================================="

@@ -99,6 +99,28 @@ class TestDomainModels(unittest.TestCase):
         l4 = Learner("L4", "User 4", "Cohort", 55.0)
         self.assertEqual(l4.calculate_letter_grade(), "F")
 
+    def test_score_non_finite_and_out_of_bounds_validation(self):
+        """Verify Learner constructor rejects NaN, Infinity, -Infinity, and values outside [0, 100]."""
+        # Test NaN
+        with self.assertRaises(ValueError):
+            Learner("L-NAN", "Test User", "Cohort", float("nan"))
+
+        # Test +Infinity
+        with self.assertRaises(ValueError):
+            Learner("L-INF", "Test User", "Cohort", float("inf"))
+
+        # Test -Infinity
+        with self.assertRaises(ValueError):
+            Learner("L-NEGINF", "Test User", "Cohort", float("-inf"))
+
+        # Test negative value
+        with self.assertRaises(ValueError):
+            Learner("L-NEG", "Test User", "Cohort", -5.0)
+
+        # Test value > 100
+        with self.assertRaises(ValueError):
+            Learner("L-OVER", "Test User", "Cohort", 105.0)
+
 
 if __name__ == "__main__":
     unittest.main()

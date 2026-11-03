@@ -160,3 +160,28 @@
  Pipeline Duration    : 2.3042 seconds
 =================================================================
 
+[2026-11-03 13:16:19] [INFO] [main:687] Initializing Sprints LEARMS Core Engine v1.0.0
+[2026-11-03 13:16:19] [INFO] [main:172] Database schema initialized successfully at '/mnt/c/Users/mw851/.gemini/antigravity/scratch/sprints_learms/data/sprints_learners.db'.
+[2026-11-03 13:16:19] [INFO] [main:288] =================================================================
+[2026-11-03 13:16:19] [INFO] [main:289] Starting Ingestion Batch: '/mnt/c/Users/mw851/.gemini/antigravity/scratch/sprints_learms/data/raw_cohort_data.csv'
+[2026-11-03 13:16:19] [INFO] [main:290] =================================================================
+[2026-11-03 13:16:20] [INFO] [main:393] [QUALITY AUDIT TRIGGER] Valid record #10: Learner SP-L-1010 (Hadeer Mostafa) flagged for QA sample (score=76.25).
+[2026-11-03 13:16:20] [INFO] [main:393] [QUALITY AUDIT TRIGGER] Valid record #20: Learner SP-L-1020 (Dina Salah) flagged for QA sample (score=90.50).
+[2026-11-03 13:16:21] [INFO] [main:393] [QUALITY AUDIT TRIGGER] Valid record #30: Learner SP-L-1030 (Laila Gohar) flagged for QA sample (score=92.50).
+[2026-11-03 13:16:21] [INFO] [main:393] [QUALITY AUDIT TRIGGER] Valid record #40: Learner SP-L-1040 (Riham Shafik) flagged for QA sample (score=85.25).
+[2026-11-03 13:16:22] [INFO] [main:459] Database transaction committed successfully.
+[2026-11-03 13:16:22] [INFO] [main:572] 
+=================================================================
+     LEARMS DATA INGESTION TRANSACTION SUMMARY REPORT     
+=================================================================
+ Execution Timestamp  : 2026-11-03 11:16:22 UTC
+ Source File Path     : /mnt/c/Users/mw851/.gemini/antigravity/scratch/sprints_learms/data/raw_cohort_data.csv
+ Total Records Scanned: 45
+ Successfully Ingested: 45
+ Malformed Rows Skipt : 0
+ Modulus Audits Flagd : 4
+ Audited Learner IDs  : SP-L-1010, SP-L-1020, SP-L-1030, SP-L-1040
+ Transaction State    : COMMITTED
+ Pipeline Duration    : 2.3084 seconds
+=================================================================
+

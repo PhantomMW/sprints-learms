@@ -241,6 +241,76 @@ class TestIngestionAndDatabase(unittest.TestCase):
         self.assertEqual(cursor.fetchone()["total"], 2)
         conn.close()
 
+    def test_nan_assessment_score_rejected(self):
+        """Verify that NaN float assessment scores are strictly rejected and logged as malformed."""
+        csv_file = os.path.join(self.test_dir.name, "nan_test.csv")
+        with open(csv_file, "w", encoding="utf-8") as f:
+            f.write("learner_id,full_name,cohort_name,assessment_score,enrollment_status\n")
+            f.write("SP-L-NAN1,Nan Student 1,Data Science Cohort 5,NaN,Active\n")
+            f.write("SP-L-NAN2,Nan Student 2,Data Science Cohort 5,nan,Active\n")
+            f.write("SP-L-OK,Valid Student,Data Science Cohort 5,88.5,Active\n")
+
+        results = self.pipeline.parse_and_ingest(csv_file)
+        self.assertEqual(results["total_rows_scanned"], 3)
+        self.assertEqual(results["valid_records_ingested"], 1)
+        self.assertEqual(results["invalid_rows_skipped"], 2)
+
+        conn = self.db_manager.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT learner_id FROM learners;")
+        rows = [r["learner_id"] for r in cursor.fetchall()]
+        self.assertIn("SP-L-OK", rows)
+        self.assertNotIn("SP-L-NAN1", rows)
+        self.assertNotIn("SP-L-NAN2", rows)
+        conn.close()
+
+    def test_infinity_assessment_score_rejected(self):
+        """Verify that +Infinity and -Infinity scores are strictly rejected without crashing."""
+        csv_file = os.path.join(self.test_dir.name, "inf_test.csv")
+        with open(csv_file, "w", encoding="utf-8") as f:
+            f.write("learner_id,full_name,cohort_name,assessment_score,enrollment_status\n")
+            f.write("SP-L-INF1,Pos Inf Student,Data Science Cohort 5,Infinity,Active\n")
+            f.write("SP-L-INF2,Pos Inf Short,Data Science Cohort 5,inf,Active\n")
+            f.write("SP-L-INF3,Neg Inf Student,Data Science Cohort 5,-Infinity,Active\n")
+            f.write("SP-L-INF4,Neg Inf Short,Data Science Cohort 5,-inf,Active\n")
+
+        results = self.pipeline.parse_and_ingest(csv_file)
+        self.assertEqual(results["total_rows_scanned"], 4)
+        self.assertEqual(results["valid_records_ingested"], 0)
+        self.assertEqual(results["invalid_rows_skipped"], 4)
+
+    def test_header_only_csv_handling(self):
+        """Verify CSV containing valid headers but zero data rows is processed gracefully."""
+        csv_file = os.path.join(self.test_dir.name, "header_only.csv")
+        with open(csv_file, "w", encoding="utf-8") as f:
+            f.write("learner_id,full_name,cohort_name,assessment_score,enrollment_status\n")
+
+        results = self.pipeline.parse_and_ingest(csv_file)
+        self.assertEqual(results["total_rows_scanned"], 0)
+        self.assertEqual(results["valid_records_ingested"], 0)
+        self.assertEqual(results["invalid_rows_skipped"], 0)
+        self.assertEqual(results["transaction_status"], "COMMITTED")
+
+    def test_database_functional_write_permission(self):
+        """Verify functional SQLite write permission by executing an explicit write transaction."""
+        conn = self.db_manager.get_connection()
+        cursor = conn.cursor()
+        
+        # Create temporary write test table
+        cursor.execute("CREATE TABLE _perm_test (id INTEGER PRIMARY KEY, note TEXT);")
+        cursor.execute("INSERT INTO _perm_test (note) VALUES (?);", ("functional_write_verified",))
+        conn.commit()
+
+        # Read back written data
+        cursor.execute("SELECT note FROM _perm_test WHERE id = 1;")
+        row = cursor.fetchone()
+        self.assertEqual(row["note"], "functional_write_verified")
+
+        # Clean up
+        cursor.execute("DROP TABLE _perm_test;")
+        conn.commit()
+        conn.close()
+
 
 if __name__ == "__main__":
     unittest.main()

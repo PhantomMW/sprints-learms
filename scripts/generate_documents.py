@@ -849,19 +849,18 @@ def generate_presentation_deck_pdf(output_path: str):
     # Slide 9: Automated Test Suite & Validation
     # -------------------------------------------------------------------------
     test_points = [
-        Paragraph("• <b>Comprehensive Test Coverage (15/15 Tests Passed in < 0.20s):</b>", card_title_style),
+        Paragraph("• <b>Comprehensive Test Coverage (20/20 Tests Passed in < 0.40s):</b>", card_title_style),
         Paragraph("• <b>Schema & SQL Injection Defense:</b> Foreign keys enforced; SQL injection payloads safely neutralized.", slide_bullet),
-        Paragraph("• <b>Edge Cases & Resiliency:</b>", slide_bullet),
+        Paragraph("• <b>Mathematical & Edge Cases Resiliency:</b>", slide_bullet),
+        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>NaN & Infinity Defense</code>: Traps non-finite floats via <code>math.isfinite()</code> preventing database corruption.", slide_body),
         Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Duplicate Learner ID</code>: Verified <code>ON CONFLICT DO UPDATE</code> updates without record loss.", slide_body),
-        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Repeated Ingestion</code>: Idempotency confirmed across identical batch runs.", slide_body),
-        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Empty CSV & Missing Headers</code>: Safe interception and rejection.", slide_body),
-        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Header Normalization</code>: Irregular spacing, dashes, and casing normalized cleanly.", slide_body),
-        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>CSV Encoding Error</code>: Corrupted non-UTF8 binary bytes trapped gracefully.", slide_body),
+        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Header-Only & Empty CSVs</code>: Safe interception of 0-byte and header-only CSV files.", slide_body),
+        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Functional DB Write Verification</code>: Validated group-write SQLite transactions as non-root operator.", slide_body),
         Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Logging Permission Failure</code>: Unwritable log path raises descriptive fatal exception.", slide_body),
     ]
     story.extend(make_slide(
         "8. Testing & Validation Matrix",
-        "15 Automated Unit & Integration Tests Passing",
+        "20 Automated Unit & Integration Tests Passing",
         test_points,
         9
     ))
@@ -873,11 +872,11 @@ def generate_presentation_deck_pdf(output_path: str):
         ["Sprint Scope", "Requirement Satisfied", "Client Acceptance Status"],
         ["Sprint 1 - SCM & Engineering", "Git version control & System Architecture Report", "ACCEPTED (100% Complete)"],
         ["Sprint 2 - Python OOP", "Base User, Learner & Instructor polymorphism", "ACCEPTED (100% Complete)"],
-        ["Sprint 2 - Python Fundamentals", "Float casting & % 10 periodic audit sampling", "ACCEPTED (100% Complete)"],
+        ["Sprint 2 - Python Fundamentals", "Float casting, NaN/Inf checks & % 10 sampling", "ACCEPTED (100% Complete)"],
         ["Sprint 2 - SQLite Database", "3NF relational DB, ON CONFLICT DO UPDATE, SQLi defense", "ACCEPTED (100% Complete)"],
         ["Sprint 2 - Error & Log Handling", "Fault-tolerant pipeline & application_activity.log", "ACCEPTED (100% Complete)"],
         ["Sprint 3 - Linux Operations", "apt-get sqlite3, Primary Group sprints_ops, chmod 750/660", "ACCEPTED (100% Complete)"],
-        ["Automated Test Suite", "15 Unit & Integration tests passing in < 0.20s", "VERIFIED (15/15 Passed)"],
+        ["Automated Test Suite", "20 Unit & Integration tests passing in < 0.40s", "VERIFIED (20/20 Passed)"],
         ["Capstone Deliverables", "Report PDF, Presentation PDF, Walkthrough Video & Repo", "READY FOR FINAL EVALUATION"],
     ]
     t_conc = Table(conc_data, colWidths=[170, 310, 232])

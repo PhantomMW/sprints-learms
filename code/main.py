@@ -10,6 +10,7 @@ Organization: Sprints
 import os
 import sys
 import csv
+import math
 import time
 import sqlite3
 import logging
@@ -522,6 +523,12 @@ class IngestionPipeline:
                 score_float = float(score_str)
             except (ValueError, TypeError):
                 return False, None, f"Invalid assessment score value '{score_str}' (cannot cast to float)"
+
+            # Check for non-finite values (NaN, +Infinity, -Infinity)
+            # Comparisons with NaN (e.g., NaN < 0.0 or NaN > 100.0) evaluate to False,
+            # which would silently bypass boundary checks and insert invalid/NULL states into SQLite.
+            if not math.isfinite(score_float):
+                return False, None, f"Assessment score must be a finite real number, received '{score_str}'"
 
             # 4. Assessment score boundary sanity check
             if score_float < 0.0 or score_float > 100.0:

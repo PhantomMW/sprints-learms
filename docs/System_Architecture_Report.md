@@ -210,7 +210,7 @@ To eliminate anomalies inherent in flat CSV files (such as cohort name redundanc
 The core pipeline in `code/main.py` is invoked via CLI or automated scripts:
 1. **Source Discovery & Validation:** Opens `data/raw_cohort_data.csv` using a streaming reader, validating that the file exists and is non-empty.
 2. **Header Normalization:** Reads the raw header row and normalizes all column titles (stripping leading/trailing whitespace, converting to lowercase, and replacing spaces/hyphens with underscores). Guarantees consistent mapping against expected schema headers (`learner_id`, `full_name`, `cohort_name`, `assessment_score`, `enrollment_status`).
-3. **Data Type Casting:** Raw string assessment scores are converted via `float(row['assessment_score'].strip())`. If casting fails (e.g., non-numeric string, negative values, empty string), the row is routed to the dead-letter error handling handler.
+3. **Data Type Casting & Finite Number Validation:** Raw string assessment scores are converted via `float(row['assessment_score'].strip())` and verified with `math.isfinite()`. This strictly intercepts non-numeric strings, `NaN`, `+Infinity`, `-Infinity`, and out-of-bounds values, routing invalid rows to the fault-tolerant exception logger without halting execution.
 4. **Relational Resolution:** The pipeline queries the `Cohorts` table for `cohort_name`. If absent, it dynamically determines the track and inserts the new cohort record, capturing the generated `cohort_id`.
 5. **Parameterized Conflict-Safe Execution:** Inserts records via:
    ```sql

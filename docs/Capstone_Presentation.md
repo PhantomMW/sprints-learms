@@ -113,17 +113,19 @@ color: #0f172a
 ---
 
 # 8. Testing & Validation Matrix
-## Rigorous Automated Test Suite (15/15 Passed)
+## Rigorous Automated Test Suite (20/20 Passed)
 
 - **Schema & SQL Defense:** Foreign key integrity & SQL injection payload neutralization verified.
-- **Edge Cases & Ingestion Resilience:**
-  - Duplicate Learner ID (`ON CONFLICT DO UPDATE`) verified.
+- **Mathematical Rigor & Edge Cases:**
+  - `NaN`, `+Infinity`, and `-Infinity` score values strictly rejected via `math.isfinite()`.
+  - Duplicate Learner ID (`ON CONFLICT DO UPDATE`) verified without record loss.
   - Repeated Ingestion Idempotency verified.
-  - Empty CSV & Missing Mandatory Headers detected and rejected cleanly.
+  - 0-byte and Header-Only CSVs detected and processed cleanly.
   - Header Normalization (whitespace, casing, dashes) verified.
   - Non-UTF8 CSV Binary Encoding Trapping verified.
   - Unwritable Log Permission Failure verified.
-- **Execution Speed:** 15 automated tests executed and passing in under 0.20 seconds.
+  - Functional SQLite Group Write Transaction verified as non-root operator.
+- **Execution Speed:** 20 automated tests executed and passing in under 0.40 seconds.
 
 ---
 

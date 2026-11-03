@@ -7,6 +7,7 @@ Author: Mohammed Wael (Junior Solutions Consultant)
 Organization: Sprints
 """
 
+import math
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
 
@@ -153,7 +154,16 @@ class Learner(User):
         )
 
         self.cohort_name = str(cohort_name).strip()
-        self.assessment_score = float(assessment_score)
+        
+        # Cast to float and enforce finite real bounds [0.0, 100.0]
+        # Traps NaN, +Infinity, and -Infinity values that would break comparisons or database constraints
+        score_val = float(assessment_score)
+        if not math.isfinite(score_val):
+            raise ValueError(f"Assessment score must be a finite real number, got {assessment_score}")
+        if score_val < 0.0 or score_val > 100.0:
+            raise ValueError(f"Assessment score must be between 0.0 and 100.0, got {score_val}")
+        self.assessment_score = score_val
+
         self.enrollment_status = str(enrollment_status).strip()
         self.is_audited = bool(is_audited)
 

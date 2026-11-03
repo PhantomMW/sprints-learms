@@ -48,6 +48,12 @@ fi
 
 echo "-----------------------------------------------------------------"
 echo "[4/4] Awaiting background process completion..."
-wait "$PID" || true
-echo "Process $PID terminated normally with exit status 0."
+if wait "$PID"; then
+    EXIT_STATUS=0
+    echo "[SUCCESS] Process $PID terminated normally with exit status 0."
+else
+    EXIT_STATUS=$?
+    echo "[FATAL ERROR] Process $PID terminated abnormally with exit status $EXIT_STATUS." >&2
+    exit "$EXIT_STATUS"
+fi
 echo "================================================================="
