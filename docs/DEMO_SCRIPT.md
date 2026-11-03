@@ -68,7 +68,7 @@
 >
 > The schema enforces relational integrity with foreign keys linking learners to their respective cohorts. Crucially, our ingestion query uses parameterized statement binding (`?` placeholders) with deterministic upsert semantics: `INSERT INTO learners (...) ON CONFLICT(learner_id) DO UPDATE SET`.
 >
-> This guarantees total immunity against SQL injection vulnerabilities and ensures idempotent, repeat-safe re-runs that preserve row identity without data truncation.
+> Parameterized SQL queries mitigate SQL injection risks by separating SQL statements from user-supplied data, while ensuring idempotent, repeat-safe re-runs that preserve row identity without data truncation.
 >
 > As shown on screen, querying the database confirms that 45 learners across 5 tech cohorts are stored, with exactly 4 learners flagged for quality audit sampling."
 
@@ -80,7 +80,7 @@
 **Spoken Narration:**
 > "In **Sprint 3: Linux Systems Administration**, we transitioned to an Ubuntu WSL2 environment.
 >
-> Using native package management, `sqlite3` and `libsqlite3-dev` were installed and verified. To adhere to the principle of least privilege, we created the `sprints_ops` administrative group and configured it as the **Primary Group** (`gid=1003`) for our non-root operator `mw851`.
+> Using native package management, `sqlite3` and `libsqlite3-dev` were installed and verified. To adhere to the principle of least privilege, we created the `sprints_ops` administrative group and configured it as the **Primary Group** (dynamically assigned `gid=1003` in our WSL2 test environment; note that GID numbers vary across Linux host environments) for our non-root operator `mw851`.
 >
 > We then applied a strict permission matrix: `chmod 750` for application code and shell scripts, `chmod 660` for the SQLite database and logs to allow group-write operations, and `chmod 640` for documentation.
 >
@@ -108,7 +108,7 @@
 **Spoken Narration:**
 > "Finally, software quality is guaranteed by our comprehensive test suite in `tests/`. 
 >
-> 23 automated unit and integration tests validate domain models, SQL injection immunity, duplicate ID updates, database migration deduplication, NaN and Infinity rejection, column count mismatches, invalid status rejection, header-only CSV processing, and SQLite safe write permissions—running in under 0.4 seconds with all tests verified.
+> 23 automated unit and integration tests validate domain models, parameterized SQL injection defense, duplicate ID updates, database migration deduplication, NaN and Infinity rejection, column count mismatches, invalid status rejection, header-only CSV processing, and SQLite safe write permissions—running in under 0.4 seconds with all tests verified.
 >
 > All project deliverables—the complete Git repository, database file, Linux terminal logs, System Architecture Report PDF, Presentation Deck, and this walkthrough—are packaged and ready for deployment.
 >

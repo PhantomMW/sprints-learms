@@ -277,7 +277,7 @@ class IngestionPipeline:
     ) -> Dict[str, Any]:
         """
         Parse raw cohort CSV data and persist records into SQLite.
-        Guarantees 100% uptime by catching and logging malformed rows.
+        Processes valid records while gracefully handling malformed CSV rows.
 
         Args:
             csv_file_path: Path to CSV data file.
@@ -716,7 +716,7 @@ def main() -> int:
     parser.add_argument("--log", default=default_log, help="Path to application activity log file")
     parser.add_argument("--simulate-load", action="store_true", help="Enable micro-delays for Linux process monitoring")
     parser.add_argument("--verify", action="store_true", help="Generate and print comprehensive database audit report")
-    parser.add_argument("--test-edge-cases", action="store_true", help="Run ingestion on corrupted CSV to verify 100%% uptime")
+    parser.add_argument("--test-edge-cases", action="store_true", help="Run ingestion on corrupted CSV to verify fault-tolerant row processing")
 
     args = parser.parse_args()
 

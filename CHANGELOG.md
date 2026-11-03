@@ -4,6 +4,20 @@ All notable technical and architectural decisions for the **Learner Assessment &
 
 ---
 
+## [1.0.2] - 2026-11-03 (Precision Refinements & Rigor Polish)
+
+### Core Ingestion & Telemetry Rigor
+- **Changed:** Refined `code/main.py` docstrings and CLI help descriptions to replace imprecise "100% uptime" claims with precise technical definitions: "Processes valid records while gracefully handling malformed CSV rows" and "verify fault-tolerant row processing".
+- **Changed:** Completely eliminated error suppression (`|| true`) and artificial fallback values (`|| echo "0.0 0.0 0 0"`) in `scripts/monitor_process.sh`, instituting explicit exit state checks and clear stderr warnings if the process snapshot or telemetry metrics cannot be retrieved.
+- **Changed:** Renamed `test_fault_tolerant_uptime_with_malformed_csv` to `test_fault_tolerant_ingestion_with_malformed_csv` in `tests/test_ingestion.py` and documentation, reflecting exact fault-tolerance semantics.
+
+### Documentation & Security Claim Precision
+- **Changed:** Replaced absolute "total immunity" assertions in `DEMO_SCRIPT.md`, `README.md`, `docs/PROJECT_CHARTER.md`, and documentation PDFs with rigorous security phrasing: *"Parameterized SQL queries mitigate SQL injection risks by separating SQL statements from user-supplied data."*
+- **Changed:** Clarified that administrative group `sprints_ops` having `GID: 1003` is dynamically assigned within the reference Ubuntu WSL2 test environment and is not a hardcoded or universal Linux constant.
+- **Updated:** Re-generated and verified `docs/System_Architecture_Report.pdf` and `docs/Capstone_Presentation.pdf`, confirming zero instances of unmeasured uptime or immunity claims.
+
+---
+
 ## [1.0.1] - 2026-11-03 (Quality Hardening & Technical Audit Release)
 
 ### Ingestion Engine & Mathematical Rigor

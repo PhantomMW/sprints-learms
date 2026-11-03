@@ -18,7 +18,7 @@ Key milestones achieved in this implementation include:
 - **Relational Integrity & SQL Injection Defense:** 3rd Normal Form schema architecture utilizing strictly parameterized queries (`?` parameter binding).
 - **Identity-Preserving Conflict Resolution:** Replaces disruptive `REPLACE` operations with `INSERT ... ON CONFLICT(learner_id) DO UPDATE SET`, ensuring idempotency and preserving existing row identity during repeated ingestion runs.
 - **Automated Periodic Quality Audit Sampling (Modulus 10):** Deterministic mathematical sampling (`counter % 10 == 0`) selecting every 10th valid learner for employer partner quality reviews.
-- **Enterprise Unix Security & Primary Group Configuration:** Least-privilege role-based access controls using `chown` and `chmod` (`750` for execution directories/scripts, `660` for databases, data files, and logs, `640` for documentation) paired with primary group provisioning (`sprints_ops`, GID: 1003) eliminating root-dependency during daily operations.
+- **Enterprise Unix Security & Primary Group Configuration:** Least-privilege role-based access controls using `chown` and `chmod` (`750` for execution directories/scripts, `660` for databases, data files, and logs, `640` for documentation) paired with primary group provisioning (`sprints_ops`, dynamically assigned GID: 1003 in our reference WSL2 environment; note that GID numbers vary across Linux host environments) eliminating root-dependency during daily operations.
 - **Real-Time Process Monitoring & Telemetry:** End-to-end command logging in `logs/linux_operations.log` and transaction tracking in `logs/application_activity.log`.
 
 ---
@@ -224,7 +224,7 @@ The core pipeline in `code/main.py` is invoked via CLI or automated scripts:
        enrollment_status = excluded.enrollment_status,
        is_audited = excluded.is_audited;
    ```
-   This ensures strict immunity against SQL injection while preserving learner entity identity during repeated or subsequent ingestion batches.
+   Parameterized SQL queries mitigate SQL injection risks by separating SQL statements from user-supplied data, while preserving learner entity identity during repeated or subsequent ingestion batches.
 
 ### 5.2 Automated Periodic Quality Audit Sampling
 To fulfill employer partner quality assurance obligations through systematic, unbiased sampling:
@@ -268,7 +268,7 @@ To prevent accidental or malicious data modification while allowing daily sysadm
    sudo groupadd -f sprints_ops
    sudo usermod -g sprints_ops $TARGET_USER
    ```
-   *Verification:* Running `id $TARGET_USER` confirms `gid=1003(sprints_ops)` as the **Primary Group**.
+   *Verification:* Running `id $TARGET_USER` confirms `gid=1003(sprints_ops)` as the **Primary Group** (dynamically assigned by the system upon creation in this reference environment; GID values vary based on existing host system groups).
 2. **Ownership Assignment (`chown`):**
    ```bash
    sudo chown -R $TARGET_USER:sprints_ops "$APP_ROOT"

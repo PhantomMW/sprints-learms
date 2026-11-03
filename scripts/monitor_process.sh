@@ -30,7 +30,11 @@ sleep 0.2
 # Monitor active process table
 echo "Filtering process table: ps aux | grep python3"
 ps aux | head -n 1
-ps aux | grep -E "[p]ython3.*code/main\.py" || true
+if MATCHED_PROC=$(ps aux | grep -E "[p]ython3.*code/main\.py"); then
+    echo "$MATCHED_PROC"
+else
+    echo "[WARNING] Target process $PID not detected in process table snapshot (may have already completed)." >&2
+fi
 
 echo "-----------------------------------------------------------------"
 echo "[3/4] Detailed Memory and CPU State Verification for PID $PID:"
@@ -39,11 +43,16 @@ if ps -p "$PID" > /dev/null 2>&1; then
     
     echo ""
     echo "Process telemetry breakdown:"
-    CPU_MEM=$(ps -p "$PID" -o %cpu,%mem,vsz,rss --no-headers || echo "0.0 0.0 0 0")
-    echo "  -> %CPU Utilization: $(echo "$CPU_MEM" | awk '{print $1}')%"
-    echo "  -> %MEM Utilization: $(echo "$CPU_MEM" | awk '{print $2}')%"
-    echo "  -> Virtual Size (VSZ): $(echo "$CPU_MEM" | awk '{print $3}') KB"
-    echo "  -> Resident Set Size (RSS): $(echo "$CPU_MEM" | awk '{print $4}') KB"
+    if CPU_MEM=$(ps -p "$PID" -o %cpu,%mem,vsz,rss --no-headers 2>/dev/null) && [ -n "$CPU_MEM" ]; then
+        echo "  -> %CPU Utilization: $(echo "$CPU_MEM" | awk '{print $1}')%"
+        echo "  -> %MEM Utilization: $(echo "$CPU_MEM" | awk '{print $2}')%"
+        echo "  -> Virtual Size (VSZ): $(echo "$CPU_MEM" | awk '{print $3}') KB"
+        echo "  -> Resident Set Size (RSS): $(echo "$CPU_MEM" | awk '{print $4}') KB"
+    else
+        echo "[ERROR] Failed to query telemetry metrics for PID $PID (process terminated prematurely)." >&2
+    fi
+else
+    echo "[WARNING] Process $PID is not running; telemetry metrics could not be retrieved." >&2
 fi
 
 echo "-----------------------------------------------------------------"

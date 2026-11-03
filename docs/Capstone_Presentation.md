@@ -77,7 +77,7 @@ color: #0f172a
 
 - **Objective:** Secure the LEARMS infrastructure without relying on root privileges for daily execution.
 - **Package Management:** Installed and verified `sqlite3` via `apt-get` within WSL2 Ubuntu, logging output to `linux_operations.log`.
-- **Primary Group (`usermod -g`):** Configured `sprints_ops` (GID: 1003) as the operator's primary group, confirmed via `id mw851`.
+- **Primary Group (`usermod -g`):** Configured `sprints_ops` (dynamically assigned GID: 1003 in WSL2 reference environment; GID numbers vary across Linux systems) as the operator's primary group, confirmed via `id mw851`.
 - **Access Permissions (`chmod`):**
   - Scripts & Directories (`750`): Read/Execute restricted to owner and `sprints_ops` group.
   - Database & Data Files (`660`): Read/Write granted to `sprints_ops` primary group, world-readable access denied.

@@ -37,7 +37,7 @@ The scope of this engagement entails architecting, engineering, securing, and do
 5. **Operational Activity Logging (`logs/application_activity.log`):** External logging of runtime events, validation warnings, and database transaction summaries.
 6. **Linux Security & Administration (`logs/linux_operations.log`):**
    - Package management verification of `sqlite3` via `apt-get` on Ubuntu 26.04.1 LTS (WSL2).
-   - Dedicated primary administrative group provisioning (`sprints_ops`, GID: 1003).
+   - Dedicated primary administrative group provisioning (`sprints_ops`, dynamically assigned GID: 1003 in our reference WSL2 Ubuntu test environment; GID numbers vary across Linux distributions).
    - Hardened permissions with `chmod 750` for scripts/code, `chmod 660` for database and logs, and `chown` for non-root execution.
    - Functional write permission verification for SQLite as non-root operator.
    - Process tracking and CPU/memory resource verification via `ps` and `grep` without error suppression.
@@ -56,12 +56,12 @@ The scope of this engagement entails architecting, engineering, securing, and do
 ## 3. Success Criteria & Metrics
 | Metric / Criteria | Target | Verification Method |
 | :--- | :--- | :--- |
-| **Ingestion Pipeline Uptime** | Fault-Tolerant Ingestion | Pipeline logs invalid rows, completes entire batch without crashing |
+| **Ingestion Pipeline Resilience** | Fault-Tolerant Ingestion | Pipeline logs invalid rows, completes entire batch gracefully without crashing |
 | **Data Normalization** | 3NF Relational Integrity | SQLite schema with foreign keys, unique constraints, and indexes |
 | **SQL Injection Prevention** | Parameterized Execution | 100% parameterized queries (`?` placeholders) verified by unit tests |
 | **Score Validation Robustness** | Strict Finite Real Numbers | Traps `NaN`, `+Inf`, `-Inf`, and out-of-bounds `[0.0, 100.0]` |
 | **Quality Audit Sampling** | 10% Periodic Sample | Modulus operation (`% 10 == 0`) with audit log entries |
-| **Linux Security Baseline** | Group-restricted access | Permissions `750`/`660`, Primary Group `sprints_ops` (GID: 1003) |
+| **Linux Security Baseline** | Group-restricted access | Permissions `750`/`660`, Primary Group `sprints_ops` (dynamically assigned GID: 1003 in reference WSL2) |
 | **Automated Testing** | Full Test Verification | 23 automated unit & integration tests passed in recorded test run |
 | **Reproducibility** | Verified Environment Setup | Linux setup verified in documented WSL2 environment |
 

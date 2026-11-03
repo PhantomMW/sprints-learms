@@ -2,7 +2,7 @@
 Integration, Security, and Robustness Tests for LEARMS Ingestion Engine & SQLite Database.
 Comprehensive coverage validating:
   - 3NF Schema & Foreign Key Enforcement
-  - SQL Injection Immunity via Parameterized Execution
+  - Parameterized SQL Injection Defense
   - Modulus Quality Audit Flagging (% 10)
   - Duplicate Handling (ON CONFLICT DO UPDATE)
   - Repeated Ingestion Idempotency
@@ -222,7 +222,7 @@ class TestIngestionAndDatabase(unittest.TestCase):
         res = self.pipeline.parse_and_ingest(corrupt_enc_file)
         self.assertIn("ENCODING", res["transaction_status"])
 
-    def test_fault_tolerant_uptime_with_malformed_csv(self):
+    def test_fault_tolerant_ingestion_with_malformed_csv(self):
         """Verify corrupted rows are skipped and valid rows are committed (Fault Tolerance)."""
         csv_file = os.path.join(self.test_dir.name, "corrupt_test.csv")
         with open(csv_file, "w", encoding="utf-8") as f:

@@ -258,8 +258,8 @@ def generate_architecture_report_pdf(output_path: str):
         "(<code>data/sprints_learners.db</code>). Built exclusively with core Python standard libraries—honoring strict "
         "client constraints against heavy third-party dependencies—LEARMS provides a fault-tolerant ingestion pipeline, "
         "automated periodic quality audit sampling (% 10 modulus check), identity-preserving conflict resolution "
-        "(<code>ON CONFLICT DO UPDATE</code>), strict parameterized SQL injection immunity, and hardened Linux primary "
-        "group security administration (<code>sprints_ops</code>, GID: 1003).",
+        "(<code>ON CONFLICT DO UPDATE</code>), robust parameterized query SQL injection defense, and hardened Linux primary "
+        "group security administration (<code>sprints_ops</code>, dynamically assigned GID: 1003 in WSL2 reference).",
         body_style
     ))
 
@@ -290,7 +290,7 @@ def generate_architecture_report_pdf(output_path: str):
         ["Sprint 2 (Day 7)", "feat(db)", "SQLite relational schema creation with normalized tables and indexes."],
         ["Sprint 2 (Day 8)", "feat(ingest)", "CSV parser, score float casting, and % 10 modulus audit mechanism."],
         ["Sprint 2 (Day 9)", "feat(log)", "Activity logging, exception handling, and transaction summaries."],
-        ["Sprint 2 (Day 10)", "test(core)", "Automated test suite (models, ingestion, injection, error uptime)."],
+        ["Sprint 2 (Day 10)", "test(core)", "Automated test suite (models, ingestion, injection, fault tolerance)."],
         ["Sprint 3 (Day 12)", "ops(linux)", "WSL Ubuntu hardening: apt-get sqlite3, chown sprints_ops, chmod 750."],
         ["Sprint 3 (Day 13)", "docs(deck)", "Executive capstone presentation slides and generated PDF deck."],
         ["Sprint 3 (Day 14)", "release", "Final video walkthrough, deployment sign-off, and GitHub remote sync."],
@@ -480,7 +480,7 @@ def generate_architecture_report_pdf(output_path: str):
     story.append(Paragraph("6.2 Security, Primary Group, and File Permissions", h2_style))
     story.append(Paragraph(
         "To safeguard learner assessment scores and prevent unauthorized tampering: "
-        "<br/>1. An administrative group <code>sprints_ops</code> (GID: 1003) was provisioned and assigned as the operator's <b>Primary Group</b> via <code>usermod -g sprints_ops $USER</code> (verified via <code>id mw851</code>). "
+        "<br/>1. An administrative group <code>sprints_ops</code> (dynamically assigned GID 1003 in reference WSL2; GID numbers vary across Linux systems) was provisioned and assigned as the operator's <b>Primary Group</b> via <code>usermod -g sprints_ops $USER</code> (verified via <code>id mw851</code>). "
         "<br/>2. Executable scripts and code files were locked to octal <code>750</code> (<code>rwxr-x---</code>). "
         "<br/>3. The SQLite database and data files were set to octal <code>660</code> (<code>rw-rw----</code>), granting group members write and read permissions for everyday ingestion without root escalation. "
         "<br/>4. Activity logs were assigned octal <code>660</code> (<code>rw-rw----</code>), and documentation set to <code>640</code> (<code>rw-r-----</code>).",
@@ -677,7 +677,7 @@ def generate_presentation_deck_pdf(output_path: str):
     ]
     c3 = [
         Paragraph("<b>Strategic Business Value</b>", card_title_style),
-        Paragraph("• Automated cohort data parsing and normalization.<br/>• Fault-tolerant ingestion with continuous uptime.<br/>• Standardized, audit-ready reports for hiring partners.<br/>• Non-root secure systems administration.", slide_body)
+        Paragraph("• Automated cohort data parsing and normalization.<br/>• Fault-tolerant ingestion with robust malformed-row handling.<br/>• Standardized, audit-ready reports for hiring partners.<br/>• Non-root secure systems administration.", slide_body)
     ]
     t_cards = Table([[c1, c2, c3]], colWidths=[234, 240, 238])
     t_cards.setStyle(TableStyle([
@@ -785,7 +785,7 @@ def generate_presentation_deck_pdf(output_path: str):
     # -------------------------------------------------------------------------
     sec_points = [
         Paragraph("• <b>Package Management:</b> Fully automated provisioning via <code>apt-get install -y sqlite3 libsqlite3-dev</code>, captured in terminal audit log.", slide_bullet),
-        Paragraph("• <b>Primary Group Assignment:</b> Configured <code>sprints_ops</code> (GID: 1003) as the operator's primary group via <code>usermod -g sprints_ops $USER</code> (verified via <code>id mw851</code>).", slide_bullet),
+        Paragraph("• <b>Primary Group Assignment:</b> Configured <code>sprints_ops</code> (dynamically assigned GID 1003 in WSL2 reference) as the operator's primary group via <code>usermod -g sprints_ops $USER</code> (verified via <code>id mw851</code>).", slide_bullet),
         Paragraph("• <b>Least-Privilege Octal Permissions:</b>", slide_bullet),
         Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;<b>- 750 (rwxr-x---):</b> Applied to Python scripts and directories (owner full control, group read/execute, world blocked).", slide_body),
         Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;<b>- 660 (rw-rw----):</b> Applied to SQLite database and data files (ensures group members have full write/read access for everyday ingestion without root privileges).", slide_body),

@@ -31,7 +31,7 @@ As cohort volumes expanded, managing learner assessment data became an acute ope
 - **Relational Normalization & SQL Injection Defense:** 100% Parameterized query execution (`?` placeholders).
 - **Identity-Preserving Conflict Resolution:** Uses `ON CONFLICT(learner_id) DO UPDATE SET` to ensure idempotency and prevent record deletion side-effects during re-ingestion.
 - **Automated Periodic Quality Audit Sampling:** Mathematically flags every 10th learner (`counter % 10 == 0`) for employer partner QA reviews.
-- **Hardened Linux Security:** Primary administrative group configuration (`sprints_ops`, GID: 1003) and least-privilege permissions (`chmod 750`/`660`/`640`) enabling daily sysadmin operations without root privileges.
+- **Hardened Linux Security:** Primary administrative group configuration (`sprints_ops`, dynamically assigned GID: 1003 in our reference WSL2 Ubuntu environment; note that GID numbers vary across Linux host systems) and least-privilege permissions (`chmod 750`/`660`/`640`) enabling daily sysadmin operations without root privileges.
 
 ---
 
@@ -184,7 +184,7 @@ test_database_functional_write_permission (test_ingestion.TestIngestionAndDataba
 test_database_schema_and_foreign_keys (test_ingestion.TestIngestionAndDatabase) ... ok
 test_duplicate_learner_id_on_conflict_update (test_ingestion.TestIngestionAndDatabase) ... ok
 test_empty_csv_handling (test_ingestion.TestIngestionAndDatabase) ... ok
-test_fault_tolerant_uptime_with_malformed_csv (test_ingestion.TestIngestionAndDatabase) ... ok
+test_fault_tolerant_ingestion_with_malformed_csv (test_ingestion.TestIngestionAndDatabase) ... ok
 test_header_normalization (test_ingestion.TestIngestionAndDatabase) ... ok
 test_header_only_csv_handling (test_ingestion.TestIngestionAndDatabase) ... ok
 test_infinity_assessment_score_rejected (test_ingestion.TestIngestionAndDatabase) ... ok
@@ -216,7 +216,7 @@ sudo ./scripts/setup_linux_env.sh
 ```
 This script:
 1. Installs `sqlite3` and `libsqlite3-dev` via `apt-get`.
-2. Sets `sprints_ops` (GID: 1003) as the **Primary Group** for the operator (`usermod -g sprints_ops $USER`).
+2. Sets `sprints_ops` as the **Primary Group** for the operator (`usermod -g sprints_ops $USER`, dynamically allocated GID: 1003 in our reference WSL2 setup; note that GID values vary across Linux systems).
 3. Hardens permissions:
    - `chmod 750 code/*.py scripts/*.sh`
    - `chmod 660 data/*.db data/*.csv` (Group read/write enabled for database updates)
