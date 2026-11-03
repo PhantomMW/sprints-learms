@@ -54,7 +54,7 @@
 >
 > The pipeline streams raw cohort CSV data without loading massive files into memory. It applies robust header normalization to handle whitespace or delimiter variations.
 >
-> In accordance with Sprints business criteria, assessment scores are cast to `float` and verified with `math.isfinite()`. To guarantee a 100% ingestion uptime, malformed or empty rows are gracefully intercepted using granular `try-except` blocks, logged as operational warnings, and skipped without terminating the batch.
+> In accordance with Sprints business criteria, assessment scores are cast to `float` and verified with `math.isfinite()`. To ensure fault-tolerant, uninterrupted batch processing, malformed or empty rows are gracefully intercepted using granular `try-except` blocks, logged as operational warnings, and skipped without halting the pipeline.
 >
 > Notice the **Modulus 10 Sampling Mechanism**: every 10th valid learner is automatically flagged with an audit indicator (`% 10 == 0`) and recorded in our system audit ledger for quality review."
 
@@ -103,12 +103,12 @@
 ---
 
 ## Chapter 7: Automated Test Suite & Capstone Deliverables (03:55 – 04:15)
-**Visual:** Running `python -m unittest discover -s tests -v`, showing 20/20 tests passing in ~0.39s, followed by the final slide showing the repository, documentation PDFs, and submission archive.
+**Visual:** Running `python -m unittest discover -s tests -v`, showing 23/23 tests passing in ~0.38s, followed by the final slide showing the repository, documentation PDFs, and submission archive.
 
 **Spoken Narration:**
 > "Finally, software quality is guaranteed by our comprehensive test suite in `tests/`. 
 >
-> 20 automated unit and integration tests validate domain models, SQL injection immunity, duplicate ID updates, NaN and Infinity rejection, header-only CSV processing, and SQLite write permissions—running in under 0.4 seconds with a 100% pass rate.
+> 23 automated unit and integration tests validate domain models, SQL injection immunity, duplicate ID updates, database migration deduplication, NaN and Infinity rejection, column count mismatches, invalid status rejection, header-only CSV processing, and SQLite safe write permissions—running in under 0.4 seconds with all tests verified.
 >
 > All project deliverables—the complete Git repository, database file, Linux terminal logs, System Architecture Report PDF, Presentation Deck, and this walkthrough—are packaged and ready for deployment.
 >

@@ -198,7 +198,7 @@ class Learner(User):
             return "F"
 
     def flag_for_audit(self) -> None:
-        """Flag this learner for random employer partner quality review."""
+        """Flag this learner for automated periodic quality audit sampling (Modulus 10 check)."""
         self.is_audited = True
 
     def display_profile(self) -> str:

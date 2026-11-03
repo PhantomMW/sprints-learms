@@ -115,22 +115,28 @@ ls -la "$APP_ROOT/logs"
 # Step 5: Functional Write Verification as Non-Root Operator
 echo "-----------------------------------------------------------------"
 echo "[STEP 5/5] Testing non-root database and log write access as '$TARGET_USER'..."
-su - "$TARGET_USER" << EOF
+
+# Generate guaranteed unique dynamic table name in outer bash before su invocation
+PROBE_TABLE="perm_probe_${$}_$(date +%s)"
+
+su - "$TARGET_USER" -c "
     set -euo pipefail
     cd '$APP_ROOT'
     # Test file write to logs
     touch logs/.perm_test && rm -f logs/.perm_test
-    # Verify sqlite database actual write permission via unique dynamic probe table
+
+    # Verify sqlite database actual write permission with trap cleanup ensuring no residual tables
     if [ -f data/sprints_learners.db ]; then
-        sqlite3 data/sprints_learners.db '
-            CREATE TABLE _perm_probe_\$\$ (id INTEGER PRIMARY KEY, ts TEXT);
-            INSERT INTO _perm_probe_\$\$ (ts) VALUES (datetime("now"));
-            DROP TABLE _perm_probe_\$\$;
+        trap 'sqlite3 data/sprints_learners.db \"DROP TABLE IF EXISTS ${PROBE_TABLE};\" >/dev/null 2>&1 || true' EXIT
+        sqlite3 data/sprints_learners.db \"
+            CREATE TABLE ${PROBE_TABLE} (id INTEGER PRIMARY KEY, ts TEXT);
+            INSERT INTO ${PROBE_TABLE} (ts) VALUES (datetime('now'));
+            DROP TABLE IF EXISTS ${PROBE_TABLE};
             PRAGMA integrity_check;
-        '
+        \"
     fi
-EOF
-echo "[SUCCESS] Non-root operator '$TARGET_USER' successfully verified with full read/write access (Safe SQLite write transaction verified)."
+"
+echo "[SUCCESS] Non-root operator '$TARGET_USER' successfully verified with full read/write access (Safe SQLite write transaction verified: ${PROBE_TABLE})."
 echo "================================================================="
 echo "   LINUX ENVIRONMENT SETUP & SECURITY PROVISIONING COMPLETE      "
 echo "================================================================="

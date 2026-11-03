@@ -113,12 +113,13 @@ color: #0f172a
 ---
 
 # 8. Testing & Validation Matrix
-## Rigorous Automated Test Suite (22/22 Passed)
+## Rigorous Automated Test Suite (23/23 Passed)
 
 - **Schema & SQL Defense:** Foreign key integrity & SQL injection payload neutralization verified.
 - **Mathematical Rigor & Edge Cases:**
   - `NaN`, `+Infinity`, and `-Infinity` score values strictly rejected via `math.isfinite()`.
   - Duplicate Learner ID (`ON CONFLICT DO UPDATE`) and system audit log idempotency verified without record duplication.
+  - Automated legacy database migration deduplication verified prior to unique index creation.
   - Column count mismatch detection (fewer or extra columns rejected without crashing).
   - Invalid enrollment statuses strictly rejected rather than silently altered.
   - Repeated Ingestion Idempotency verified.
@@ -126,8 +127,8 @@ color: #0f172a
   - Header Normalization (whitespace, casing, dashes) verified.
   - Non-UTF8 CSV Binary Encoding Trapping verified.
   - Unwritable Log Permission Failure verified.
-  - Functional SQLite Group Write Transaction verified with safe dynamic probe tables.
-- **Execution Speed:** 22 automated tests executed and passing in under 0.40 seconds.
+  - Functional SQLite Group Write Transaction verified with safe dynamic probe tables and guaranteed cleanup.
+- **Execution Speed:** 23 automated tests executed and passing in under 0.40 seconds.
 
 ---
 

@@ -299,10 +299,9 @@ class TestIngestionAndDatabase(unittest.TestCase):
     def test_database_functional_write_permission(self):
         """Verify functional SQLite write permission by executing an explicit write transaction with a unique table."""
         conn = self.db_manager.get_connection()
+        cursor = conn.cursor()
+        probe_table = f"_perm_test_probe_{int(time.time() * 1000)}"
         try:
-            cursor = conn.cursor()
-            # Create temporary unique write test table to avoid collisions
-            probe_table = f"_perm_test_probe_{int(time.time() * 1000)}"
             cursor.execute(f"CREATE TABLE {probe_table} (id INTEGER PRIMARY KEY, note TEXT);")
             cursor.execute(f"INSERT INTO {probe_table} (note) VALUES (?);", ("functional_write_verified",))
             conn.commit()
@@ -311,12 +310,20 @@ class TestIngestionAndDatabase(unittest.TestCase):
             cursor.execute(f"SELECT note FROM {probe_table} WHERE id = 1;")
             row = cursor.fetchone()
             self.assertEqual(row["note"], "functional_write_verified")
-
-            # Clean up
-            cursor.execute(f"DROP TABLE {probe_table};")
-            conn.commit()
         finally:
+            try:
+                cursor.execute(f"DROP TABLE IF EXISTS {probe_table};")
+                conn.commit()
+            except Exception:
+                pass
             conn.close()
+
+        # Confirm probe table was strictly cleaned up
+        verify_conn = self.db_manager.get_connection()
+        v_cursor = verify_conn.cursor()
+        v_cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?;", (probe_table,))
+        self.assertIsNone(v_cursor.fetchone())
+        verify_conn.close()
 
     def test_csv_column_count_mismatch_rejected(self):
         """Verify rows with fewer or more columns than headers are rejected as malformed without crashing."""
@@ -369,6 +376,59 @@ class TestIngestionAndDatabase(unittest.TestCase):
         self.assertEqual(rows[0]["learner_id"], "SP-L-GOOD")
         self.assertEqual(rows[0]["enrollment_status"], "Active")
         conn.close()
+
+    def test_legacy_database_migration_with_duplicate_audits(self):
+        """Verify initialize_schema deduplicates legacy duplicate audit rows before creating unique index."""
+        legacy_db_path = os.path.join(self.test_dir.name, "legacy_audit_test.db")
+        raw_conn = sqlite3.connect(legacy_db_path)
+        with raw_conn:
+            # Create old unconstrained system_audit_log table
+            raw_conn.execute("""
+                CREATE TABLE system_audit_log (
+                    log_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    event_type TEXT NOT NULL,
+                    learner_id TEXT,
+                    message TEXT NOT NULL,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            # Insert intentional duplicate rows for the same learner and event_type
+            raw_conn.execute(
+                "INSERT INTO system_audit_log (event_type, learner_id, message) VALUES (?, ?, ?);",
+                ("QUALITY_AUDIT_FLAG", "SP-L-1010", "Old legacy audit entry 1"),
+            )
+            raw_conn.execute(
+                "INSERT INTO system_audit_log (event_type, learner_id, message) VALUES (?, ?, ?);",
+                ("QUALITY_AUDIT_FLAG", "SP-L-1010", "Old legacy audit entry 2 (newer)"),
+            )
+            raw_conn.execute(
+                "INSERT INTO system_audit_log (event_type, learner_id, message) VALUES (?, ?, ?);",
+                ("QUALITY_AUDIT_FLAG", "SP-L-1020", "Unique audit entry"),
+            )
+        raw_conn.close()
+
+        # Initialize DatabaseManager pointing to this legacy db - must migrate without IntegrityError
+        legacy_manager = DatabaseManager(legacy_db_path, self.logger)
+        legacy_manager.initialize_schema()
+
+        # Verify results: duplicate SP-L-1010 was purged (kept the newer entry 2), SP-L-1020 retained
+        check_conn = legacy_manager.get_connection()
+        cur = check_conn.cursor()
+        cur.execute("SELECT event_type, learner_id, message FROM system_audit_log ORDER BY learner_id;")
+        rows = cur.fetchall()
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rows[0]["learner_id"], "SP-L-1010")
+        self.assertEqual(rows[0]["message"], "Old legacy audit entry 2 (newer)")
+        self.assertEqual(rows[1]["learner_id"], "SP-L-1020")
+
+        # Verify UNIQUE index exists and rejects duplicate manual insert
+        with self.assertRaises(sqlite3.IntegrityError):
+            with check_conn:
+                check_conn.execute(
+                    "INSERT INTO system_audit_log (event_type, learner_id, message) VALUES (?, ?, ?);",
+                    ("QUALITY_AUDIT_FLAG", "SP-L-1010", "Should violate unique index"),
+                )
+        check_conn.close()
 
 
 if __name__ == "__main__":

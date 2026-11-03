@@ -127,8 +127,10 @@ class DatabaseManager:
         """
         Construct normalized relational tables for Cohorts and Learners.
         Guarantees Third Normal Form (3NF) relational layout with foreign keys.
+        Includes an automated migration step to deduplicate any legacy audit records
+        prior to enforcing the unique constraint index on (event_type, learner_id).
         """
-        schema_sql = """
+        schema_tables_sql = """
         -- 1. Cohorts Table (Parent entity)
         CREATE TABLE IF NOT EXISTS cohorts (
             cohort_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -157,7 +159,19 @@ class DatabaseManager:
             message TEXT NOT NULL,
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+        """
 
+        # Automated migration query to purge duplicate audit events if upgrading a legacy database
+        migration_dedup_sql = """
+        DELETE FROM system_audit_log
+        WHERE log_id NOT IN (
+            SELECT MAX(log_id)
+            FROM system_audit_log
+            GROUP BY event_type, learner_id
+        );
+        """
+
+        schema_indexes_sql = """
         -- 4. B-Tree Indexes for rapid employer reporting & audit idempotency
         CREATE INDEX IF NOT EXISTS idx_learners_cohort ON learners (cohort_id);
         CREATE INDEX IF NOT EXISTS idx_learners_audit ON learners (is_audited);
@@ -169,7 +183,9 @@ class DatabaseManager:
         try:
             conn = self.get_connection()
             with conn:
-                conn.executescript(schema_sql)
+                conn.executescript(schema_tables_sql)
+                conn.execute(migration_dedup_sql)
+                conn.executescript(schema_indexes_sql)
             self.logger.info("Database schema initialized successfully at '%s'.", self.db_path)
         except sqlite3.Error as err:
             self.logger.critical("Fatal error initializing database schema: %s", err)

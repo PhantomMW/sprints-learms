@@ -4,7 +4,7 @@
 [![Database](https://img.shields.io/badge/Database-SQLite3%20Normalized-003B57?logo=sqlite&logoColor=white)](#)
 [![OS Environment](https://img.shields.io/badge/Environment-Linux%20%7C%20WSL2%20Ubuntu-FCC624?logo=linux&logoColor=black)](#)
 [![SCM](https://img.shields.io/badge/Version%20Control-Git%20Structured-F05032?logo=git&logoColor=white)](#)
-[![Tests](https://img.shields.io/badge/Automated%20Tests-22%2F22%20Passing-10B981)](#)
+[![Tests](https://img.shields.io/badge/Automated%20Tests-23%2F23%20Passing-10B981)](#)
 [![Fault Tolerance](https://img.shields.io/badge/Ingestion%20Pipeline-Fault%20Tolerant-008DDA)](#)
 
 > **Client:** Sprints (EdTech & Talent-Development Platform, MENA)  
@@ -176,7 +176,7 @@ Execute the full test suite verifying OOP models, database integrity, idempotenc
 ```bash
 python -m unittest discover -s tests -p "test_*.py" -v
 ```
-**Execution Evidence (22/22 Passed):**
+**Execution Evidence (23/23 Passed):**
 ```text
 test_csv_column_count_mismatch_rejected (test_ingestion.TestIngestionAndDatabase) ... ok
 test_csv_encoding_error (test_ingestion.TestIngestionAndDatabase) ... ok
@@ -189,6 +189,7 @@ test_header_normalization (test_ingestion.TestIngestionAndDatabase) ... ok
 test_header_only_csv_handling (test_ingestion.TestIngestionAndDatabase) ... ok
 test_infinity_assessment_score_rejected (test_ingestion.TestIngestionAndDatabase) ... ok
 test_invalid_enrollment_status_rejected (test_ingestion.TestIngestionAndDatabase) ... ok
+test_legacy_database_migration_with_duplicate_audits (test_ingestion.TestIngestionAndDatabase) ... ok
 test_logging_permission_failure (test_ingestion.TestIngestionAndDatabase) ... ok
 test_missing_mandatory_headers (test_ingestion.TestIngestionAndDatabase) ... ok
 test_modulus_audit_flagging (test_ingestion.TestIngestionAndDatabase) ... ok
@@ -201,7 +202,7 @@ test_learner_inheritance_and_polymorphism (test_models.TestDomainModels) ... ok
 test_score_grade_boundaries (test_models.TestDomainModels) ... ok
 test_score_non_finite_and_out_of_bounds_validation (test_models.TestDomainModels) ... ok
 ----------------------------------------------------------------------
-Ran 22 tests in 0.345s - OK
+Ran 23 tests in 0.384s - OK
 ```
 
 ---
