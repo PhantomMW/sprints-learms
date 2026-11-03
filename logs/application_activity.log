@@ -1,0 +1,112 @@
+[2026-11-03 12:19:53] [INFO] [main:627] Initializing Sprints LEARMS Core Engine v1.0.0
+[2026-11-03 12:19:53] [INFO] [main:165] Database schema initialized successfully at 'C:\Users\mw851\.gemini\antigravity\scratch\sprints_learms\data\sprints_learners.db'.
+[2026-11-03 12:19:53] [INFO] [main:281] =================================================================
+[2026-11-03 12:19:53] [INFO] [main:282] Starting Ingestion Batch: 'C:\Users\mw851\.gemini\antigravity\scratch\sprints_learms\data\raw_cohort_data.csv'
+[2026-11-03 12:19:53] [INFO] [main:283] =================================================================
+[2026-11-03 12:19:53] [INFO] [main:201] Created new Cohort record: ID=1, Name='Data Science Cohort 5', Track='Data Science'.
+[2026-11-03 12:19:53] [INFO] [main:201] Created new Cohort record: ID=2, Name='Full Stack Web Development Cohort 8', Track='Full Stack Web Development'.
+[2026-11-03 12:19:53] [INFO] [main:201] Created new Cohort record: ID=3, Name='AI & Machine Learning Cohort 2', Track='AI & Machine Learning'.
+[2026-11-03 12:19:53] [INFO] [main:201] Created new Cohort record: ID=4, Name='Cloud Computing Cohort 3', Track='Cloud Computing'.
+[2026-11-03 12:19:53] [INFO] [main:201] Created new Cohort record: ID=5, Name='Cybersecurity Cohort 1', Track='Cybersecurity'.
+[2026-11-03 12:19:53] [INFO] [main:354] [QUALITY AUDIT TRIGGER] Valid record #10: Learner SP-L-1010 (Hadeer Mostafa) flagged for QA sample (score=76.25).
+[2026-11-03 12:19:53] [INFO] [main:354] [QUALITY AUDIT TRIGGER] Valid record #20: Learner SP-L-1020 (Dina Salah) flagged for QA sample (score=90.50).
+[2026-11-03 12:19:53] [INFO] [main:354] [QUALITY AUDIT TRIGGER] Valid record #30: Learner SP-L-1030 (Laila Gohar) flagged for QA sample (score=92.50).
+[2026-11-03 12:19:53] [INFO] [main:354] [QUALITY AUDIT TRIGGER] Valid record #40: Learner SP-L-1040 (Riham Shafik) flagged for QA sample (score=85.25).
+[2026-11-03 12:19:53] [INFO] [main:413] Database transaction committed successfully.
+[2026-11-03 12:19:53] [INFO] [main:512] 
+=================================================================
+     LEARMS DATA INGESTION TRANSACTION SUMMARY REPORT     
+=================================================================
+ Execution Timestamp  : 2026-11-03 10:19:53 UTC
+ Source File Path     : C:\Users\mw851\.gemini\antigravity\scratch\sprints_learms\data\raw_cohort_data.csv
+ Total Records Scanned: 45
+ Successfully Ingested: 45
+ Malformed Rows Skipt : 0
+ Modulus Audits Flagd : 4
+ Audited Learner IDs  : SP-L-1010, SP-L-1020, SP-L-1030, SP-L-1040
+ Transaction State    : COMMITTED
+ Pipeline Duration    : 0.0135 seconds
+=================================================================
+
+[2026-11-03 12:20:04] [INFO] [main:627] Initializing Sprints LEARMS Core Engine v1.0.0
+[2026-11-03 12:20:04] [INFO] [main:165] Database schema initialized successfully at 'C:\Users\mw851\.gemini\antigravity\scratch\sprints_learms\data\sprints_learners.db'.
+[2026-11-03 12:20:04] [INFO] [main:643] [EDGE CASE TESTING MODE ACTIVATED] Running against corrupted dataset: 'C:\Users\mw851\.gemini\antigravity\scratch\sprints_learms\data\corrupted_sample_data.csv'
+[2026-11-03 12:20:04] [INFO] [main:281] =================================================================
+[2026-11-03 12:20:04] [INFO] [main:282] Starting Ingestion Batch: 'C:\Users\mw851\.gemini\antigravity\scratch\sprints_learms\data\corrupted_sample_data.csv'
+[2026-11-03 12:20:04] [INFO] [main:283] =================================================================
+[2026-11-03 12:20:04] [WARNING] [main:331] [MALFORMED ROW SKIPPED] Row #2: Invalid assessment score value 'INVALID_SCORE' (cannot cast to float) | Raw Content: {'learner_id': 'SP-L-2002', 'full_name': 'Nourhan Salem', 'cohort_name': 'Data Science Cohort 5', 'assessment_score': 'INVALID_SCORE', 'enrollment_status': 'Active'}
+[2026-11-03 12:20:04] [WARNING] [main:331] [MALFORMED ROW SKIPPED] Row #4: Invalid assessment score value '' (cannot cast to float) | Raw Content: {'learner_id': 'SP-L-2004', 'full_name': 'Mona Zahran', 'cohort_name': 'Cloud Computing Cohort 3', 'assessment_score': '', 'enrollment_status': 'Active'}
+[2026-11-03 12:20:04] [WARNING] [main:331] [MALFORMED ROW SKIPPED] Row #5: Assessment score -5.00 outside valid [0, 100] range | Raw Content: {'learner_id': 'SP-L-2005', 'full_name': 'Hassan Radwan', 'cohort_name': 'Full Stack Web Development Cohort 8', 'assessment_score': '-5.00', 'enrollment_status': 'Active'}
+[2026-11-03 12:20:04] [WARNING] [main:331] [MALFORMED ROW SKIPPED] Row #7: Missing mandatory field (learner_id, full_name, or cohort_name) | Raw Content: {'learner_id': 'SP-L-2007', 'full_name': 'Ziad Fouad', 'cohort_name': '', 'assessment_score': '85.00', 'enrollment_status': 'Active'}
+[2026-11-03 12:20:04] [WARNING] [main:331] [MALFORMED ROW SKIPPED] Row #9: Invalid assessment score value 'N/A' (cannot cast to float) | Raw Content: {'learner_id': 'SP-L-2009', 'full_name': 'Ramy Ezz', 'cohort_name': 'Cybersecurity Cohort 1', 'assessment_score': 'N/A', 'enrollment_status': 'Active'}
+[2026-11-03 12:20:04] [INFO] [main:413] Database transaction committed successfully.
+[2026-11-03 12:20:04] [INFO] [main:512] 
+=================================================================
+     LEARMS DATA INGESTION TRANSACTION SUMMARY REPORT     
+=================================================================
+ Execution Timestamp  : 2026-11-03 10:20:04 UTC
+ Source File Path     : C:\Users\mw851\.gemini\antigravity\scratch\sprints_learms\data\corrupted_sample_data.csv
+ Total Records Scanned: 10
+ Successfully Ingested: 5
+ Malformed Rows Skipt : 5
+ Modulus Audits Flagd : 0
+ Audited Learner IDs  : None
+ Transaction State    : COMMITTED
+ Pipeline Duration    : 0.0071 seconds
+=================================================================
+
+[2026-11-03 12:20:23] [INFO] [main:627] Initializing Sprints LEARMS Core Engine v1.0.0
+[2026-11-03 12:20:23] [INFO] [main:165] Database schema initialized successfully at 'C:\Users\mw851\.gemini\antigravity\scratch\sprints_learms\data\sprints_learners.db'.
+[2026-11-03 12:20:23] [INFO] [main:281] =================================================================
+[2026-11-03 12:20:23] [INFO] [main:282] Starting Ingestion Batch: 'C:\Users\mw851\.gemini\antigravity\scratch\sprints_learms\data\raw_cohort_data.csv'
+[2026-11-03 12:20:23] [INFO] [main:283] =================================================================
+[2026-11-03 12:20:23] [INFO] [main:201] Created new Cohort record: ID=1, Name='Data Science Cohort 5', Track='Data Science'.
+[2026-11-03 12:20:23] [INFO] [main:201] Created new Cohort record: ID=2, Name='Full Stack Web Development Cohort 8', Track='Full Stack Web Development'.
+[2026-11-03 12:20:23] [INFO] [main:201] Created new Cohort record: ID=3, Name='AI & Machine Learning Cohort 2', Track='AI & Machine Learning'.
+[2026-11-03 12:20:23] [INFO] [main:201] Created new Cohort record: ID=4, Name='Cloud Computing Cohort 3', Track='Cloud Computing'.
+[2026-11-03 12:20:23] [INFO] [main:201] Created new Cohort record: ID=5, Name='Cybersecurity Cohort 1', Track='Cybersecurity'.
+[2026-11-03 12:20:23] [INFO] [main:354] [QUALITY AUDIT TRIGGER] Valid record #10: Learner SP-L-1010 (Hadeer Mostafa) flagged for QA sample (score=76.25).
+[2026-11-03 12:20:23] [INFO] [main:354] [QUALITY AUDIT TRIGGER] Valid record #20: Learner SP-L-1020 (Dina Salah) flagged for QA sample (score=90.50).
+[2026-11-03 12:20:23] [INFO] [main:354] [QUALITY AUDIT TRIGGER] Valid record #30: Learner SP-L-1030 (Laila Gohar) flagged for QA sample (score=92.50).
+[2026-11-03 12:20:23] [INFO] [main:354] [QUALITY AUDIT TRIGGER] Valid record #40: Learner SP-L-1040 (Riham Shafik) flagged for QA sample (score=85.25).
+[2026-11-03 12:20:23] [INFO] [main:413] Database transaction committed successfully.
+[2026-11-03 12:20:23] [INFO] [main:512] 
+=================================================================
+     LEARMS DATA INGESTION TRANSACTION SUMMARY REPORT     
+=================================================================
+ Execution Timestamp  : 2026-11-03 10:20:23 UTC
+ Source File Path     : C:\Users\mw851\.gemini\antigravity\scratch\sprints_learms\data\raw_cohort_data.csv
+ Total Records Scanned: 45
+ Successfully Ingested: 45
+ Malformed Rows Skipt : 0
+ Modulus Audits Flagd : 4
+ Audited Learner IDs  : SP-L-1010, SP-L-1020, SP-L-1030, SP-L-1040
+ Transaction State    : COMMITTED
+ Pipeline Duration    : 0.0078 seconds
+=================================================================
+
+[2026-11-03 12:23:50] [INFO] [main:627] Initializing Sprints LEARMS Core Engine v1.0.0
+[2026-11-03 12:23:50] [INFO] [main:165] Database schema initialized successfully at '/mnt/c/Users/mw851/.gemini/antigravity/scratch/sprints_learms/data/sprints_learners.db'.
+[2026-11-03 12:23:50] [INFO] [main:281] =================================================================
+[2026-11-03 12:23:50] [INFO] [main:282] Starting Ingestion Batch: '/mnt/c/Users/mw851/.gemini/antigravity/scratch/sprints_learms/data/raw_cohort_data.csv'
+[2026-11-03 12:23:50] [INFO] [main:283] =================================================================
+[2026-11-03 12:23:51] [INFO] [main:354] [QUALITY AUDIT TRIGGER] Valid record #10: Learner SP-L-1010 (Hadeer Mostafa) flagged for QA sample (score=76.25).
+[2026-11-03 12:23:51] [INFO] [main:354] [QUALITY AUDIT TRIGGER] Valid record #20: Learner SP-L-1020 (Dina Salah) flagged for QA sample (score=90.50).
+[2026-11-03 12:23:52] [INFO] [main:354] [QUALITY AUDIT TRIGGER] Valid record #30: Learner SP-L-1030 (Laila Gohar) flagged for QA sample (score=92.50).
+[2026-11-03 12:23:52] [INFO] [main:354] [QUALITY AUDIT TRIGGER] Valid record #40: Learner SP-L-1040 (Riham Shafik) flagged for QA sample (score=85.25).
+[2026-11-03 12:23:52] [INFO] [main:413] Database transaction committed successfully.
+[2026-11-03 12:23:52] [INFO] [main:512] 
+=================================================================
+     LEARMS DATA INGESTION TRANSACTION SUMMARY REPORT     
+=================================================================
+ Execution Timestamp  : 2026-11-03 10:23:52 UTC
+ Source File Path     : /mnt/c/Users/mw851/.gemini/antigravity/scratch/sprints_learms/data/raw_cohort_data.csv
+ Total Records Scanned: 45
+ Successfully Ingested: 45
+ Malformed Rows Skipt : 0
+ Modulus Audits Flagd : 4
+ Audited Learner IDs  : SP-L-1010, SP-L-1020, SP-L-1030, SP-L-1040
+ Transaction State    : COMMITTED
+ Pipeline Duration    : 2.3043 seconds
+=================================================================
+
