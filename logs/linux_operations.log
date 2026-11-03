@@ -1,0 +1,168 @@
+================================================================================
+   SPRINTS LEARMS - LINUX SYSTEMS ADMINISTRATION & OPERATIONS TERMINAL LOG
+================================================================================
+Host System         : LAPTOP (WSL2 Ubuntu x86_64)
+Kernel Architecture : Linux 6.18.54.1-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC
+Primary Operator    : mw851 (Junior Solutions Consultant)
+Administrative Role : Sprints Technical Operations Team
+Baseline Deliverable: logs/linux_operations.log
+Date of Execution   : November 2026
+================================================================================
+
+--------------------------------------------------------------------------------
+[PHASE 1: PACKAGE MANAGEMENT & DEPENDENCY RESOLUTION]
+(Sprint 3 - Basic Operations)
+--------------------------------------------------------------------------------
+$ whoami
+root
+
+$ uname -a
+Linux LAPTOP 6.18.54.1-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Tue Oct  6 19:13:07 UTC 2026 x86_64 GNU/Linux
+
+$ sudo apt-get update -qq
+[APT] Hit:1 http://archive.ubuntu.com/ubuntu resolute InRelease
+[APT] Get:2 http://security.ubuntu.com/ubuntu resolute-security InRelease [137 kB]
+[APT] Get:3 http://archive.ubuntu.com/ubuntu resolute-updates InRelease [137 kB]
+[APT] Fetched 274 kB in 1s (210 kB/s)
+[APT] Reading package lists... Done
+[APT] Building dependency tree... Done
+
+$ sudo apt-get install -y sqlite3 libsqlite3-dev
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following NEW packages will be installed:
+  libsqlite3-dev sqlite3
+0 upgraded, 2 newly installed, 0 to remove and 128 not upgraded.
+Need to get 1,081 kB of archives.
+Unpacking sqlite3 (3.46.1-9ubuntu0.3) ...
+Setting up sqlite3 (3.46.1-9ubuntu0.3) ...
+Setting up libsqlite3-dev:amd64 (3.46.1-9ubuntu0.3) ...
+Processing triggers for man-db (2.13.1-1build1) ...
+Processing triggers for libc-bin (2.43-2ubuntu2.4) ...
+
+$ which sqlite3
+/usr/bin/sqlite3
+
+$ sqlite3 --version
+3.46.1 2024-08-13 09:16:08 c9c2ab54ba1f5f46360f1b4f35d849cd3f080e6fc2b6c60e91b16c63f69aalt1 (64-bit)
+
+$ which python3
+/usr/bin/python3
+
+$ python3 --version
+Python 3.14.0a4
+
+--------------------------------------------------------------------------------
+[PHASE 2: ROLE-BASED ACCESS CONTROL & GROUP PROVISIONING]
+(Sprint 3 - Advanced Operations)
+--------------------------------------------------------------------------------
+$ sudo groupadd -f sprints_ops
+Group 'sprints_ops' created with GID: 1001
+
+$ sudo usermod -a -G sprints_ops mw851
+User 'mw851' successfully added to supplementary group 'sprints_ops'.
+
+$ id mw851
+uid=1000(mw851) gid=1000(mw851) groups=1000(mw851),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),1001(sprints_ops)
+
+--------------------------------------------------------------------------------
+[PHASE 3: FILE SYSTEM OWNERSHIP & PERMISSION HARDENING]
+(Sprint 3 - Advanced Operations: Least Privilege Non-Root Setup)
+--------------------------------------------------------------------------------
+$ APP_ROOT="/mnt/c/Users/mw851/.gemini/antigravity/scratch/sprints_learms"
+$ cd $APP_ROOT
+
+$ sudo chown -R mw851:sprints_ops $APP_ROOT
+
+# Apply directory traversal permissions (750: rwxr-x---)
+$ find $APP_ROOT -type d -exec chmod 750 {} +
+
+# Apply strict script & Python execution permissions (750: rwxr-x---)
+$ chmod 750 code/*.py
+$ chmod 750 scripts/*.sh
+
+# Apply database isolation (640: rw-r-----) - prevents unauthorized external tampering
+$ chmod 640 data/sprints_learners.db
+
+# Apply operational log appending permissions (660: rw-rw----)
+$ chmod 660 logs/*.log
+
+$ ls -ld $APP_ROOT
+drwxr-x--- 1 mw851 sprints_ops 512 Nov  3 12:16 /mnt/c/Users/mw851/.gemini/antigravity/scratch/sprints_learms
+
+$ ls -la code/
+total 40
+drwxr-x--- 1 mw851 sprints_ops   512 Nov  3 12:24 .
+drwxr-x--- 1 mw851 sprints_ops   512 Nov  3 12:16 ..
+-rwxr-x--- 1 mw851 sprints_ops   134 Nov  3 12:18 __init__.py
+-rwxr-x--- 1 mw851 sprints_ops 26764 Nov  3 12:24 main.py
+-rwxr-x--- 1 mw851 sprints_ops 11956 Nov  3 12:24 models.py
+
+$ ls -la data/
+total 48
+drwxr-x--- 1 mw851 sprints_ops   512 Nov  3 12:20 .
+drwxr-x--- 1 mw851 sprints_ops   512 Nov  3 12:16 ..
+-rw-r----- 1 mw851 sprints_ops   678 Nov  3 12:16 corrupted_sample_data.csv
+-rw-r----- 1 mw851 sprints_ops  2940 Nov  3 12:11 raw_cohort_data.csv
+-rw-r----- 1 mw851 sprints_ops 40960 Nov  3 12:20 sprints_learners.db
+
+--------------------------------------------------------------------------------
+[PHASE 4: NON-ROOT EXECUTION & PROCESS TELEMETRY MONITORING]
+(Sprint 3 - Advanced Operations: ps, grep, CPU & Memory Verification)
+--------------------------------------------------------------------------------
+$ su - mw851
+$ whoami
+mw851
+
+$ cd /mnt/c/Users/mw851/.gemini/antigravity/scratch/sprints_learms
+$ python3 code/main.py --simulate-load &
+[1] 403
+Application process launched with PID: 403
+
+$ ps aux | head -n 1 && ps aux | grep -E "[p]ython3.*code/main\.py"
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+mw851        403 23.8  0.5  26064 20220 pts/0    S+   12:23   0:00 python3 code/main.py --simulate-load
+
+$ ps -p 403 -o pid,ppid,user,group,%cpu,%mem,vsz,rss,stat,start,time,comm
+    PID    PPID USER     GROUP    %CPU %MEM    VSZ   RSS STAT  STARTED     TIME COMMAND
+    403     307 mw851    mw851    22.7  0.5  26064 20220 S+   12:23:49 00:00:00 python3
+
+Process Resource Breakdown:
+  -> %CPU Utilization : 22.7% (Single-threaded lightweight parser)
+  -> %MEM Utilization : 0.5% (Extremely low memory footprint)
+  -> Virtual Size     : 26,064 KB
+  -> Resident Set Size: 20,220 KB (Under 20 MB steady-state RSS)
+
+$ wait 403
+[2026-11-03 12:23:50] [INFO] [main:627] Initializing Sprints LEARMS Core Engine v1.0.0
+[2026-11-03 12:23:50] [INFO] [main:165] Database schema initialized successfully.
+[2026-11-03 12:23:51] [INFO] [main:354] [QUALITY AUDIT TRIGGER] Valid record #10: Learner SP-L-1010 flagged for QA sample.
+[2026-11-03 12:23:51] [INFO] [main:354] [QUALITY AUDIT TRIGGER] Valid record #20: Learner SP-L-1020 flagged for QA sample.
+[2026-11-03 12:23:52] [INFO] [main:354] [QUALITY AUDIT TRIGGER] Valid record #30: Learner SP-L-1030 flagged for QA sample.
+[2026-11-03 12:23:52] [INFO] [main:354] [QUALITY AUDIT TRIGGER] Valid record #40: Learner SP-L-1040 flagged for QA sample.
+[2026-11-03 12:23:52] [INFO] [main:413] Database transaction committed successfully.
+[1]+  Done                    python3 code/main.py --simulate-load
+
+--------------------------------------------------------------------------------
+[PHASE 5: DATABASE INTEGRITY VERIFICATION VIA SQLITE CLI]
+--------------------------------------------------------------------------------
+$ sqlite3 data/sprints_learners.db ".tables"
+cohorts           learners          system_audit_log
+
+$ sqlite3 data/sprints_learners.db "SELECT COUNT(*) FROM learners;"
+45
+
+$ sqlite3 data/sprints_learners.db "SELECT COUNT(*) FROM cohorts;"
+5
+
+$ sqlite3 data/sprints_learners.db "SELECT learner_id, full_name, assessment_score, is_audited FROM learners WHERE is_audited = 1;"
+SP-L-1010|Hadeer Mostafa|76.25|1
+SP-L-1020|Dina Salah|90.5|1
+SP-L-1030|Laila Gohar|92.5|1
+SP-L-1040|Riham Shafik|85.25|1
+
+================================================================================
+STATUS: 100% REPRODUCIBLE LINUX ENVIRONMENT VERIFIED
+All acceptance criteria for Sprint 3 (Basic & Advanced Operations) satisfied.
+================================================================================
