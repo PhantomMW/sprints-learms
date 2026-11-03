@@ -1,0 +1,11 @@
+learner_id,full_name,cohort_name,assessment_score,enrollment_status
+SP-L-2001,Karim Mostafa,AI & Machine Learning Cohort 2,88.50,Active
+SP-L-2002,Nourhan Salem,Data Science Cohort 5,INVALID_SCORE,Active
+SP-L-2003,Tariq Mansour,Cybersecurity Cohort 1,91.00,Active
+SP-L-2004,Mona Zahran,Cloud Computing Cohort 3,,Active
+SP-L-2005,Hassan Radwan,Full Stack Web Development Cohort 8,-5.00,Active
+SP-L-2006,Dalia Samir,Data Science Cohort 5,79.25,Graduated
+SP-L-2007,Ziad Fouad,,85.00,Active
+SP-L-2008,Laila Kassem,AI & Machine Learning Cohort 2,94.50,Active
+SP-L-2009,Ramy Ezz,Cybersecurity Cohort 1,N/A,Active
+SP-L-2010,Habiba Nabil,Full Stack Web Development Cohort 8,82.00,Active

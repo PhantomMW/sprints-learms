@@ -1,0 +1,46 @@
+learner_id,full_name,cohort_name,assessment_score,enrollment_status
+SP-L-1001,Ahmed Youssef,Data Science Cohort 5,85.50,Active
+SP-L-1002,Salma Tareq,Full Stack Web Development Cohort 8,92.00,Graduated
+SP-L-1003,Mahmoud Hassan,AI & Machine Learning Cohort 2,78.25,Active
+SP-L-1004,Nouran El-Sayed,Data Science Cohort 5,88.75,Active
+SP-L-1005,Kareem Adel,Cloud Computing Cohort 3,65.00,Dropped
+SP-L-1006,Mona Ibrahim,Cybersecurity Cohort 1,94.50,Active
+SP-L-1007,Omar Fathy,Full Stack Web Development Cohort 8,81.00,Active
+SP-L-1008,Sara Samir,Data Science Cohort 5,73.50,Active
+SP-L-1009,Youssef Kamal,AI & Machine Learning Cohort 2,89.00,Graduated
+SP-L-1010,Hadeer Mostafa,Cloud Computing Cohort 3,76.25,Active
+SP-L-1011,Ali Mahmoud,Cybersecurity Cohort 1,55.00,Dropped
+SP-L-1012,Rana Tarek,Full Stack Web Development Cohort 8,98.50,Graduated
+SP-L-1013,Khaled Zaki,Data Science Cohort 5,82.75,Active
+SP-L-1014,Yasmin Fouad,AI & Machine Learning Cohort 2,91.25,Active
+SP-L-1015,Mostafa Amin,Cloud Computing Cohort 3,84.00,Graduated
+SP-L-1016,Noha Ezzat,Cybersecurity Cohort 1,79.50,Active
+SP-L-1017,Hassan El-Din,Data Science Cohort 5,68.00,Active
+SP-L-1018,Amira Nabil,Full Stack Web Development Cohort 8,87.50,Active
+SP-L-1019,Tarek Shawky,AI & Machine Learning Cohort 2,72.00,Dropped
+SP-L-1020,Dina Salah,Cloud Computing Cohort 3,90.50,Graduated
+SP-L-1021,Mohamed Reda,Cybersecurity Cohort 1,95.75,Active
+SP-L-1022,Heba Essam,Data Science Cohort 5,83.00,Active
+SP-L-1023,Sherif Taha,Full Stack Web Development Cohort 8,77.25,Active
+SP-L-1024,Farah Wael,AI & Machine Learning Cohort 2,93.00,Graduated
+SP-L-1025,Hussein Abdel-Rahman,Cloud Computing Cohort 3,61.50,Dropped
+SP-L-1026,Mariam Mansour,Cybersecurity Cohort 1,88.25,Active
+SP-L-1027,Amr Bahaa,Data Science Cohort 5,74.50,Active
+SP-L-1028,Maha Othman,Full Stack Web Development Cohort 8,86.00,Graduated
+SP-L-1029,Ziad Alfy,AI & Machine Learning Cohort 2,80.75,Active
+SP-L-1030,Laila Gohar,Cloud Computing Cohort 3,92.50,Active
+SP-L-1031,Ahmed Farouk,Cybersecurity Cohort 1,67.25,Dropped
+SP-L-1032,Rasha Mounir,Data Science Cohort 5,89.50,Active
+SP-L-1033,Eslam Wagdy,Full Stack Web Development Cohort 8,96.00,Graduated
+SP-L-1034,Aya Hussein,AI & Machine Learning Cohort 2,81.50,Active
+SP-L-1035,Tamer Sobhy,Cloud Computing Cohort 3,75.00,Active
+SP-L-1036,Nadine Rashad,Cybersecurity Cohort 1,84.75,Active
+SP-L-1037,Walid Hamza,Data Science Cohort 5,91.00,Graduated
+SP-L-1038,Sherine Anwar,Full Stack Web Development Cohort 8,70.50,Active
+SP-L-1039,Hesham Gad,AI & Machine Learning Cohort 2,63.00,Dropped
+SP-L-1040,Riham Shafik,Cloud Computing Cohort 3,85.25,Active
+SP-L-1041,Khaled Nawar,Cybersecurity Cohort 1,97.50,Graduated
+SP-L-1042,Mai Magdy,Data Science Cohort 5,79.00,Active
+SP-L-1043,Yasser Rizk,Full Stack Web Development Cohort 8,88.00,Active
+SP-L-1044,Nour Yassin,AI & Machine Learning Cohort 2,94.25,Graduated
+SP-L-1045,Salwa Maged,Cloud Computing Cohort 3,82.50,Active
