@@ -15,6 +15,7 @@ Comprehensive coverage validating:
 
 import os
 import stat
+import time
 import sqlite3
 import tempfile
 import unittest
@@ -164,6 +165,10 @@ class TestIngestionAndDatabase(unittest.TestCase):
         cursor = conn.cursor()
         cursor.execute("SELECT COUNT(*) AS total FROM learners;")
         self.assertEqual(cursor.fetchone()["total"], 15)
+
+        # Verify system_audit_log is ALSO idempotent (only 1 audit record for SP-L-2010, not duplicated)
+        cursor.execute("SELECT COUNT(*) AS total FROM system_audit_log WHERE event_type = 'QUALITY_AUDIT_FLAG';")
+        self.assertEqual(cursor.fetchone()["total"], 1)
         conn.close()
 
     def test_empty_csv_handling(self):
@@ -292,23 +297,77 @@ class TestIngestionAndDatabase(unittest.TestCase):
         self.assertEqual(results["transaction_status"], "COMMITTED")
 
     def test_database_functional_write_permission(self):
-        """Verify functional SQLite write permission by executing an explicit write transaction."""
+        """Verify functional SQLite write permission by executing an explicit write transaction with a unique table."""
+        conn = self.db_manager.get_connection()
+        try:
+            cursor = conn.cursor()
+            # Create temporary unique write test table to avoid collisions
+            probe_table = f"_perm_test_probe_{int(time.time() * 1000)}"
+            cursor.execute(f"CREATE TABLE {probe_table} (id INTEGER PRIMARY KEY, note TEXT);")
+            cursor.execute(f"INSERT INTO {probe_table} (note) VALUES (?);", ("functional_write_verified",))
+            conn.commit()
+
+            # Read back written data
+            cursor.execute(f"SELECT note FROM {probe_table} WHERE id = 1;")
+            row = cursor.fetchone()
+            self.assertEqual(row["note"], "functional_write_verified")
+
+            # Clean up
+            cursor.execute(f"DROP TABLE {probe_table};")
+            conn.commit()
+        finally:
+            conn.close()
+
+    def test_csv_column_count_mismatch_rejected(self):
+        """Verify rows with fewer or more columns than headers are rejected as malformed without crashing."""
+        csv_file = os.path.join(self.test_dir.name, "column_mismatch.csv")
+        with open(csv_file, "w", encoding="utf-8") as f:
+            f.write("learner_id,full_name,cohort_name,assessment_score,enrollment_status\n")
+            # 5 columns - valid
+            f.write("SP-L-OK1,Valid Student,Data Science Cohort 5,90.0,Active\n")
+            # 3 columns - too few
+            f.write("SP-L-SHORT,Short Student,Data Science Cohort 5\n")
+            # 4 columns - too few
+            f.write("SP-L-FOUR,Four Col Student,Data Science Cohort 5,85.0\n")
+            # 7 columns - too many
+            f.write("SP-L-EXTRA,Extra Student,Data Science Cohort 5,88.0,Active,Extra1,Extra2\n")
+            # 5 columns - valid
+            f.write("SP-L-OK2,Valid Student 2,Data Science Cohort 5,92.0,Graduated\n")
+
+        results = self.pipeline.parse_and_ingest(csv_file)
+        self.assertEqual(results["total_rows_scanned"], 5)
+        self.assertEqual(results["valid_records_ingested"], 2)
+        self.assertEqual(results["invalid_rows_skipped"], 3)
+        self.assertEqual(results["transaction_status"], "COMMITTED")
+
         conn = self.db_manager.get_connection()
         cursor = conn.cursor()
-        
-        # Create temporary write test table
-        cursor.execute("CREATE TABLE _perm_test (id INTEGER PRIMARY KEY, note TEXT);")
-        cursor.execute("INSERT INTO _perm_test (note) VALUES (?);", ("functional_write_verified",))
-        conn.commit()
+        cursor.execute("SELECT learner_id FROM learners ORDER BY learner_id;")
+        ingested_ids = [r["learner_id"] for r in cursor.fetchall()]
+        self.assertEqual(ingested_ids, ["SP-L-OK1", "SP-L-OK2"])
+        conn.close()
 
-        # Read back written data
-        cursor.execute("SELECT note FROM _perm_test WHERE id = 1;")
-        row = cursor.fetchone()
-        self.assertEqual(row["note"], "functional_write_verified")
+    def test_invalid_enrollment_status_rejected(self):
+        """Verify records with invalid enrollment statuses are rejected as malformed rather than silently coerced."""
+        csv_file = os.path.join(self.test_dir.name, "bad_status.csv")
+        with open(csv_file, "w", encoding="utf-8") as f:
+            f.write("learner_id,full_name,cohort_name,assessment_score,enrollment_status\n")
+            f.write("SP-L-BAD1,Unknown Status,Data Science Cohort 5,80.0,Suspended\n")
+            f.write("SP-L-BAD2,Typo Status,Data Science Cohort 5,85.0,actve\n")
+            f.write("SP-L-GOOD,Valid Status,Data Science Cohort 5,90.0,Active\n")
 
-        # Clean up
-        cursor.execute("DROP TABLE _perm_test;")
-        conn.commit()
+        results = self.pipeline.parse_and_ingest(csv_file)
+        self.assertEqual(results["total_rows_scanned"], 3)
+        self.assertEqual(results["valid_records_ingested"], 1)
+        self.assertEqual(results["invalid_rows_skipped"], 2)
+
+        conn = self.db_manager.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT learner_id, enrollment_status FROM learners;")
+        rows = cursor.fetchall()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["learner_id"], "SP-L-GOOD")
+        self.assertEqual(rows[0]["enrollment_status"], "Active")
         conn.close()
 
 

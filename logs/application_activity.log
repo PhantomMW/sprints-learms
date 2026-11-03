@@ -185,3 +185,61 @@
  Pipeline Duration    : 2.3084 seconds
 =================================================================
 
+[2026-11-03 13:45:48] [INFO] [main:709] Initializing Sprints LEARMS Core Engine v1.0.0
+[2026-11-03 13:45:48] [CRITICAL] [main:175] Fatal error initializing database schema: UNIQUE constraint failed: system_audit_log.event_type, system_audit_log.learner_id
+[2026-11-03 13:45:48] [CRITICAL] [main:716] Fatal initialization fault: UNIQUE constraint failed: system_audit_log.event_type, system_audit_log.learner_id
+[2026-11-03 13:46:12] [INFO] [main:709] Initializing Sprints LEARMS Core Engine v1.0.0
+[2026-11-03 13:46:12] [INFO] [main:173] Database schema initialized successfully at 'C:\Users\mw851\.gemini\antigravity\scratch\sprints_learms\data\sprints_learners.db'.
+[2026-11-03 13:46:12] [INFO] [main:289] =================================================================
+[2026-11-03 13:46:12] [INFO] [main:290] Starting Ingestion Batch: 'C:\Users\mw851\.gemini\antigravity\scratch\sprints_learms\data\raw_cohort_data.csv'
+[2026-11-03 13:46:12] [INFO] [main:291] =================================================================
+[2026-11-03 13:46:12] [INFO] [main:209] Created new Cohort record: ID=1, Name='Data Science Cohort 5', Track='Data Science'.
+[2026-11-03 13:46:12] [INFO] [main:209] Created new Cohort record: ID=2, Name='Full Stack Web Development Cohort 8', Track='Full Stack Web Development'.
+[2026-11-03 13:46:12] [INFO] [main:209] Created new Cohort record: ID=3, Name='AI & Machine Learning Cohort 2', Track='AI & Machine Learning'.
+[2026-11-03 13:46:12] [INFO] [main:209] Created new Cohort record: ID=4, Name='Cloud Computing Cohort 3', Track='Cloud Computing'.
+[2026-11-03 13:46:12] [INFO] [main:209] Created new Cohort record: ID=5, Name='Cybersecurity Cohort 1', Track='Cybersecurity'.
+[2026-11-03 13:46:12] [INFO] [main:406] [QUALITY AUDIT TRIGGER] Valid record #10: Learner SP-L-1010 (Hadeer Mostafa) flagged for QA sample (score=76.25).
+[2026-11-03 13:46:12] [INFO] [main:406] [QUALITY AUDIT TRIGGER] Valid record #20: Learner SP-L-1020 (Dina Salah) flagged for QA sample (score=90.50).
+[2026-11-03 13:46:12] [INFO] [main:406] [QUALITY AUDIT TRIGGER] Valid record #30: Learner SP-L-1030 (Laila Gohar) flagged for QA sample (score=92.50).
+[2026-11-03 13:46:12] [INFO] [main:406] [QUALITY AUDIT TRIGGER] Valid record #40: Learner SP-L-1040 (Riham Shafik) flagged for QA sample (score=85.25).
+[2026-11-03 13:46:12] [INFO] [main:478] Database transaction committed successfully.
+[2026-11-03 13:46:12] [INFO] [main:594] 
+=================================================================
+     LEARMS DATA INGESTION TRANSACTION SUMMARY REPORT     
+=================================================================
+ Execution Timestamp  : 2026-11-03 11:46:12 UTC
+ Source File Path     : C:\Users\mw851\.gemini\antigravity\scratch\sprints_learms\data\raw_cohort_data.csv
+ Total Records Scanned: 45
+ Successfully Ingested: 45
+ Malformed Rows Skipt : 0
+ Modulus Audits Flagd : 4
+ Audited Learner IDs  : SP-L-1010, SP-L-1020, SP-L-1030, SP-L-1040
+ Transaction State    : COMMITTED
+ Pipeline Duration    : 0.0155 seconds
+=================================================================
+
+[2026-11-03 13:46:17] [INFO] [main:709] Initializing Sprints LEARMS Core Engine v1.0.0
+[2026-11-03 13:46:17] [INFO] [main:173] Database schema initialized successfully at 'C:\Users\mw851\.gemini\antigravity\scratch\sprints_learms\data\sprints_learners.db'.
+[2026-11-03 13:46:17] [INFO] [main:289] =================================================================
+[2026-11-03 13:46:17] [INFO] [main:290] Starting Ingestion Batch: 'C:\Users\mw851\.gemini\antigravity\scratch\sprints_learms\data\raw_cohort_data.csv'
+[2026-11-03 13:46:17] [INFO] [main:291] =================================================================
+[2026-11-03 13:46:17] [INFO] [main:406] [QUALITY AUDIT TRIGGER] Valid record #10: Learner SP-L-1010 (Hadeer Mostafa) flagged for QA sample (score=76.25).
+[2026-11-03 13:46:17] [INFO] [main:406] [QUALITY AUDIT TRIGGER] Valid record #20: Learner SP-L-1020 (Dina Salah) flagged for QA sample (score=90.50).
+[2026-11-03 13:46:17] [INFO] [main:406] [QUALITY AUDIT TRIGGER] Valid record #30: Learner SP-L-1030 (Laila Gohar) flagged for QA sample (score=92.50).
+[2026-11-03 13:46:17] [INFO] [main:406] [QUALITY AUDIT TRIGGER] Valid record #40: Learner SP-L-1040 (Riham Shafik) flagged for QA sample (score=85.25).
+[2026-11-03 13:46:17] [INFO] [main:478] Database transaction committed successfully.
+[2026-11-03 13:46:17] [INFO] [main:594] 
+=================================================================
+     LEARMS DATA INGESTION TRANSACTION SUMMARY REPORT     
+=================================================================
+ Execution Timestamp  : 2026-11-03 11:46:17 UTC
+ Source File Path     : C:\Users\mw851\.gemini\antigravity\scratch\sprints_learms\data\raw_cohort_data.csv
+ Total Records Scanned: 45
+ Successfully Ingested: 45
+ Malformed Rows Skipt : 0
+ Modulus Audits Flagd : 4
+ Audited Learner IDs  : SP-L-1010, SP-L-1020, SP-L-1030, SP-L-1040
+ Transaction State    : COMMITTED
+ Pipeline Duration    : 0.0098 seconds
+=================================================================
+

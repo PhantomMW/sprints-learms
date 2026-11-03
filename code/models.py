@@ -164,7 +164,11 @@ class Learner(User):
             raise ValueError(f"Assessment score must be between 0.0 and 100.0, got {score_val}")
         self.assessment_score = score_val
 
-        self.enrollment_status = str(enrollment_status).strip()
+        valid_statuses = {"Active", "Graduated", "Dropped"}
+        clean_status = str(enrollment_status).strip()
+        if clean_status not in valid_statuses:
+            raise ValueError(f"Invalid enrollment_status '{clean_status}'. Permitted statuses: {sorted(valid_statuses)}")
+        self.enrollment_status = clean_status
         self.is_audited = bool(is_audited)
 
     @property

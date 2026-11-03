@@ -31,7 +31,7 @@ The scope of this engagement entails architecting, engineering, securing, and do
    - Strict data casting of assessment scores to finite `float` (`math.isfinite`), strictly intercepting `NaN`, `Infinity`, and `-Infinity`.
    - Idempotent and deterministic ingestion policy using `INSERT ... ON CONFLICT(learner_id) DO UPDATE SET` to preserve record identity without data truncation.
    - Mathematical quality audit mechanism flagging every 10th learner (`processed_valid_counter % 10 == 0`).
-   - Fault-tolerant exception handling logging malformed rows without process termination (100% uptime policy).
+   - Fault-tolerant exception handling logging malformed rows without process termination.
    - Mandatory operational activity logging (`logs/application_activity.log`) enforcing immediate abort if log creation fails.
 4. **Relational Database (`data/sprints_learners.db`):** Normalized 3NF SQLite relational database containing normalized `cohorts` and `learners` tables, foreign keys, and parameterized query execution to strictly prevent SQL injection.
 5. **Operational Activity Logging (`logs/application_activity.log`):** External logging of runtime events, validation warnings, and database transaction summaries.
@@ -56,14 +56,14 @@ The scope of this engagement entails architecting, engineering, securing, and do
 ## 3. Success Criteria & Metrics
 | Metric / Criteria | Target | Verification Method |
 | :--- | :--- | :--- |
-| **Ingestion Pipeline Uptime** | 100% Fault Tolerance | Pipeline logs invalid rows, completes entire batch without crashing |
+| **Ingestion Pipeline Uptime** | Fault-Tolerant Ingestion | Pipeline logs invalid rows, completes entire batch without crashing |
 | **Data Normalization** | 3NF Relational Integrity | SQLite schema with foreign keys, unique constraints, and indexes |
-| **SQL Injection Prevention** | 0 Vulnerabilities | 100% parameterized queries (`?` placeholders) verified by unit tests |
+| **SQL Injection Prevention** | Parameterized Execution | 100% parameterized queries (`?` placeholders) verified by unit tests |
 | **Score Validation Robustness** | Strict Finite Real Numbers | Traps `NaN`, `+Inf`, `-Inf`, and out-of-bounds `[0.0, 100.0]` |
 | **Quality Audit Sampling** | 10% Periodic Sample | Modulus operation (`% 10 == 0`) with audit log entries |
 | **Linux Security Baseline** | Group-restricted access | Permissions `750`/`660`, Primary Group `sprints_ops` (GID: 1003) |
-| **Automated Testing** | 100% Pass Rate | 20 Automated Unit & Integration Tests (`tests/test_*.py`) |
-| **Reproducibility** | 100% Third-party reproducible | Execution of `scripts/setup_linux_env.sh` and `logs/linux_operations.log` |
+| **Automated Testing** | Full Test Verification | 22 automated unit & integration tests passed in recorded test run |
+| **Reproducibility** | Verified Environment Setup | Linux setup verified in documented WSL2 environment |
 
 ---
 

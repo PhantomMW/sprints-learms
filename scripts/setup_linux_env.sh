@@ -115,22 +115,22 @@ ls -la "$APP_ROOT/logs"
 # Step 5: Functional Write Verification as Non-Root Operator
 echo "-----------------------------------------------------------------"
 echo "[STEP 5/5] Testing non-root database and log write access as '$TARGET_USER'..."
-su - "$TARGET_USER" -c "
+su - "$TARGET_USER" << EOF
     set -euo pipefail
     cd '$APP_ROOT'
     # Test file write to logs
-    touch logs/.perm_test && rm logs/.perm_test
-    # Verify sqlite database actual write permission via temporary table transaction
+    touch logs/.perm_test && rm -f logs/.perm_test
+    # Verify sqlite database actual write permission via unique dynamic probe table
     if [ -f data/sprints_learners.db ]; then
         sqlite3 data/sprints_learners.db '
-            CREATE TABLE IF NOT EXISTS _perm_write_test (id INTEGER PRIMARY KEY, ts TEXT);
-            INSERT INTO _perm_write_test (ts) VALUES (datetime(\"now\"));
-            DROP TABLE _perm_write_test;
+            CREATE TABLE _perm_probe_\$\$ (id INTEGER PRIMARY KEY, ts TEXT);
+            INSERT INTO _perm_probe_\$\$ (ts) VALUES (datetime("now"));
+            DROP TABLE _perm_probe_\$\$;
             PRAGMA integrity_check;
         '
     fi
-"
-echo "[SUCCESS] Non-root operator '$TARGET_USER' successfully verified with full read/write access (SQLite write transaction verified)."
+EOF
+echo "[SUCCESS] Non-root operator '$TARGET_USER' successfully verified with full read/write access (Safe SQLite write transaction verified)."
 echo "================================================================="
 echo "   LINUX ENVIRONMENT SETUP & SECURITY PROVISIONING COMPLETE      "
 echo "================================================================="

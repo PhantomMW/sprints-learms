@@ -121,6 +121,10 @@ class TestDomainModels(unittest.TestCase):
         with self.assertRaises(ValueError):
             Learner("L-OVER", "Test User", "Cohort", 105.0)
 
+        # Test invalid enrollment status
+        with self.assertRaises(ValueError):
+            Learner("L-BADSTAT", "Test User", "Cohort", 80.0, enrollment_status="Suspended")
+
 
 if __name__ == "__main__":
     unittest.main()

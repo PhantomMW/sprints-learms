@@ -158,10 +158,11 @@ class DatabaseManager:
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
-        -- 4. B-Tree Indexes for rapid employer reporting
+        -- 4. B-Tree Indexes for rapid employer reporting & audit idempotency
         CREATE INDEX IF NOT EXISTS idx_learners_cohort ON learners (cohort_id);
         CREATE INDEX IF NOT EXISTS idx_learners_audit ON learners (is_audited);
         CREATE INDEX IF NOT EXISTS idx_cohorts_name ON cohorts (cohort_name);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_audit_event_learner ON system_audit_log (event_type, learner_id);
         """
 
         conn = None
@@ -359,6 +360,18 @@ class IngestionPipeline:
                         self.logger.warning("[EMPTY ROW SKIPPED] Row #%d contains no values.", row_idx)
                         continue
 
+                    # Strict Column Count Validation: intercept truncated or excess column rows
+                    if len(row_values) != len(normalized_headers):
+                        metrics["invalid_rows_skipped"] += 1
+                        self.logger.warning(
+                            "[MALFORMED ROW SKIPPED] Row #%d: Column count mismatch (expected %d columns, received %d) | Content: %s",
+                            row_idx,
+                            len(normalized_headers),
+                            len(row_values),
+                            row_values,
+                        )
+                        continue
+
                     # Construct dictionary using normalized headers
                     raw_row = dict(zip(normalized_headers, [v.strip() for v in row_values]))
 
@@ -440,10 +453,16 @@ class IngestionPipeline:
                         ),
                     )
 
-                    # Write system audit entry if flagged
+                    # Write system audit entry if flagged (Idempotent per learner and event_type)
                     if is_audited:
                         cursor.execute(
-                            "INSERT INTO system_audit_log (event_type, learner_id, message) VALUES (?, ?, ?);",
+                            """
+                            INSERT INTO system_audit_log (event_type, learner_id, message)
+                            VALUES (?, ?, ?)
+                            ON CONFLICT(event_type, learner_id) DO UPDATE SET
+                                message = excluded.message,
+                                timestamp = CURRENT_TIMESTAMP;
+                            """,
                             (
                                 "QUALITY_AUDIT_FLAG",
                                 learner_entity.learner_id,
@@ -534,11 +553,14 @@ class IngestionPipeline:
             if score_float < 0.0 or score_float > 100.0:
                 return False, None, f"Assessment score {score_float:.2f} outside valid [0, 100] range"
 
-            # 5. Enrollment status validation
+            # 5. Enrollment status validation (Strict: reject unknown statuses with descriptive error)
             valid_statuses = {"Active", "Graduated", "Dropped"}
             if enrollment_status not in valid_statuses:
-                # Default to Active if status unrecognized but log notice
-                enrollment_status = "Active"
+                return (
+                    False,
+                    None,
+                    f"Invalid enrollment_status '{enrollment_status}'. Permitted lifecycle statuses: {sorted(valid_statuses)}",
+                )
 
             return True, {
                 "learner_id": learner_id,

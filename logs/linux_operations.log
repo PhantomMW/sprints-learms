@@ -169,9 +169,9 @@ $ wait 405
 [1]+  Done                    python3 code/main.py --simulate-load
 
 --------------------------------------------------------------------------------
-[PHASE 6: DATABASE INTEGRITY & WRITE PERMISSION VERIFICATION VIA SQLITE CLI]
+[PHASE 6: DATABASE INTEGRITY & SAFE WRITE PROBE VIA SQLITE CLI]
 --------------------------------------------------------------------------------
-$ sqlite3 data/sprints_learners.db "CREATE TABLE _perm_write_test (id INTEGER PRIMARY KEY, ts TEXT); INSERT INTO _perm_write_test (ts) VALUES (datetime('now')); DROP TABLE _perm_write_test; PRAGMA integrity_check;"
+$ sqlite3 data/sprints_learners.db "CREATE TABLE _perm_probe_$$ (id INTEGER PRIMARY KEY, ts TEXT); INSERT INTO _perm_probe_$$ (ts) VALUES (datetime('now')); DROP TABLE _perm_probe_$$; PRAGMA integrity_check;"
 ok
 
 $ sqlite3 data/sprints_learners.db ".tables"

@@ -221,7 +221,7 @@ def generate_architecture_report_pdf(output_path: str):
         Paragraph(
             "<b>Mission Mandate:</b> Architect and deploy a secure, standardized Python-driven backend application "
             "that eliminates data ingestion bottlenecks, replaces unversioned flat text files with normalized SQLite "
-            "persistence, enforces 100% ingestion uptime, and hardens the hosting Linux environment with least-privilege "
+            "persistence, enforces fault-tolerant ingestion with complete error isolation, and hardens the hosting Linux environment with least-privilege "
             "group permissions.",
             ParagraphStyle("ExecCallout", parent=body_style, textColor=COLOR_PRIMARY)
         )
@@ -500,7 +500,7 @@ def generate_architecture_report_pdf(output_path: str):
     story.append(HRFlowable(width="100%", thickness=1, color=COLOR_SECONDARY, spaceAfter=8))
     story.append(Paragraph(
         "The LEARMS capstone implementation fully resolves the data ingestion bottleneck identified by Fatima Rashid. "
-        "Through strict adherence to core Python OOP principles, normalized relational data modeling, 100% uptime exception "
+        "Through strict adherence to core Python OOP principles, normalized relational data modeling, fault-tolerant exception "
         "handling, and Linux least-privilege security hardening, LEARMS provides Sprints with an enterprise-ready foundation "
         "ready for immediate production deployment.",
         body_style
@@ -513,7 +513,7 @@ def generate_architecture_report_pdf(output_path: str):
         ["OOP Architecture & Polymorphism", "COMPLETED", "code/models.py (User, Learner, Instructor)"],
         ["Relational SQLite Normalization", "COMPLETED", "data/sprints_learners.db (3NF, FKs, Indexes)"],
         ["Modulus Audit Sampling (% 10)", "COMPLETED", "Flagged 4 learners (SP-L-1010, 1020, 1030, 1040)"],
-        ["100% Ingestion Uptime", "COMPLETED", "corrupted_sample_data.csv edge tests passed"],
+        ["Fault-Tolerant Ingestion", "COMPLETED", "corrupted_sample_data.csv edge tests passed"],
         ["Linux Package & Permission Hardening", "COMPLETED", "logs/linux_operations.log (apt, chmod, chown, ps)"],
         ["Executive Presentation Deck", "COMPLETED", "docs/Capstone_Presentation.pdf"],
         ["Recorded Walkthrough Video", "COMPLETED", "Demo_Walkthrough.mp4 & DEMO_SCRIPT.md"],
@@ -670,11 +670,11 @@ def generate_presentation_deck_pdf(output_path: str):
     ]
     c2 = [
         Paragraph("<b>The LEARMS Solution</b>", card_title_style),
-        Paragraph("• Core Python automated ingestion pipeline.<br/>• Normalized 3NF SQLite database (<code>sprints_learners.db</code>).<br/>• Modulus-based random quality auditing (% 10 check).<br/>• Hardened Linux WSL environment (group-level permissions).", slide_body)
+        Paragraph("• Core Python automated ingestion pipeline.<br/>• Normalized 3NF SQLite database (<code>sprints_learners.db</code>).<br/>• Automated periodic quality audit sampling (% 10 check).<br/>• Hardened Linux WSL environment (group-level permissions).", slide_body)
     ]
     c3 = [
         Paragraph("<b>Strategic Business Value</b>", card_title_style),
-        Paragraph("• 100% elimination of manual data manipulation.<br/>• 100% ingestion uptime with fault-tolerant parsing.<br/>• Standardized, audit-ready reports for hiring partners.<br/>• Non-root secure systems administration.", slide_body)
+        Paragraph("• Automated cohort data parsing and normalization.<br/>• Fault-tolerant ingestion with continuous uptime.<br/>• Standardized, audit-ready reports for hiring partners.<br/>• Non-root secure systems administration.", slide_body)
     ]
     t_cards = Table([[c1, c2, c3]], colWidths=[234, 240, 238])
     t_cards.setStyle(TableStyle([
@@ -718,7 +718,7 @@ def generate_presentation_deck_pdf(output_path: str):
     db_table_data = [
         ["Table", "Primary Key", "Foreign Keys & Constraints", "Key Attributes Stored"],
         ["Cohorts", "cohort_id (INT)", "UNIQUE(cohort_name)", "cohort_name, program_track, created_at"],
-        ["Learners", "learner_id (TEXT)", "FK -> cohorts(cohort_id) ON DELETE CASCADE", "full_name, assessment_score (REAL), status, is_audited"],
+        ["Learners", "learner_id (TEXT)", "FK -> cohorts(cohort_id) ON DELETE RESTRICT ON UPDATE CASCADE", "full_name, assessment_score (REAL), status, is_audited"],
         ["System Audit Log", "log_id (INT)", "learner_id reference", "event_type, message, timestamp"],
     ]
     t_db = Table(db_table_data, colWidths=[110, 110, 240, 252])
@@ -735,7 +735,7 @@ def generate_presentation_deck_pdf(output_path: str):
         t_db,
         Spacer(1, 10),
         Paragraph("• <b>Third Normal Form (3NF):</b> Eliminates cohort name duplication and update anomalies across flat files.", slide_bullet),
-        Paragraph("• <b>SQL Injection Defense:</b> 100% Parameterized queries (<code>?</code> placeholders) strictly prevent malicious input payloads.", slide_bullet),
+        Paragraph("• <b>SQL Injection Defense:</b> Strictly parameterized queries (<code>?</code> placeholders) prevent malicious input payloads.", slide_bullet),
         Paragraph("• <b>High-Speed Indexing:</b> B-Tree indexes on <code>cohort_id</code> and <code>is_audited</code> ensure instant employer filtering.", slide_bullet),
     ]
     story.extend(make_slide(
@@ -821,7 +821,7 @@ def generate_presentation_deck_pdf(output_path: str):
     story.extend(make_slide(
         "6. Process Monitoring & Operations",
         "Telemetry and Resource Verification Under Active Ingestion",
-        [t_proc, Spacer(1, 10), Paragraph("<b>Verification:</b> Linux terminal command log in <code>logs/linux_operations.log</code> proves 100% reproducible execution.", slide_body)],
+        [t_proc, Spacer(1, 10), Paragraph("<b>Verification:</b> Linux terminal command log in <code>logs/linux_operations.log</code> verifies reproducible environment provisioning.", slide_body)],
         7
     ))
 
@@ -849,18 +849,19 @@ def generate_presentation_deck_pdf(output_path: str):
     # Slide 9: Automated Test Suite & Validation
     # -------------------------------------------------------------------------
     test_points = [
-        Paragraph("• <b>Comprehensive Test Coverage (20/20 Tests Passed in < 0.40s):</b>", card_title_style),
+        Paragraph("• <b>Comprehensive Test Coverage (22/22 Tests Passed in < 0.40s):</b>", card_title_style),
         Paragraph("• <b>Schema & SQL Injection Defense:</b> Foreign keys enforced; SQL injection payloads safely neutralized.", slide_bullet),
         Paragraph("• <b>Mathematical & Edge Cases Resiliency:</b>", slide_bullet),
         Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>NaN & Infinity Defense</code>: Traps non-finite floats via <code>math.isfinite()</code> preventing database corruption.", slide_body),
-        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Duplicate Learner ID</code>: Verified <code>ON CONFLICT DO UPDATE</code> updates without record loss.", slide_body),
+        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Duplicate Learner ID & Audit Idempotency</code>: Verified <code>ON CONFLICT DO UPDATE</code> updates without duplication.", slide_body),
+        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Column Count & Status Validation</code>: Intercepts column count mismatches and invalid enrollment statuses.", slide_body),
         Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Header-Only & Empty CSVs</code>: Safe interception of 0-byte and header-only CSV files.", slide_body),
-        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Functional DB Write Verification</code>: Validated group-write SQLite transactions as non-root operator.", slide_body),
+        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Functional DB Write Verification</code>: Validated safe group-write SQLite transactions as non-root operator.", slide_body),
         Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Logging Permission Failure</code>: Unwritable log path raises descriptive fatal exception.", slide_body),
     ]
     story.extend(make_slide(
         "8. Testing & Validation Matrix",
-        "20 Automated Unit & Integration Tests Passing",
+        "22 Automated Unit & Integration Tests Passing",
         test_points,
         9
     ))
@@ -876,7 +877,7 @@ def generate_presentation_deck_pdf(output_path: str):
         ["Sprint 2 - SQLite Database", "3NF relational DB, ON CONFLICT DO UPDATE, SQLi defense", "ACCEPTED (100% Complete)"],
         ["Sprint 2 - Error & Log Handling", "Fault-tolerant pipeline & application_activity.log", "ACCEPTED (100% Complete)"],
         ["Sprint 3 - Linux Operations", "apt-get sqlite3, Primary Group sprints_ops, chmod 750/660", "ACCEPTED (100% Complete)"],
-        ["Automated Test Suite", "20 Unit & Integration tests passing in < 0.40s", "VERIFIED (20/20 Passed)"],
+        ["Automated Test Suite", "22 Unit & Integration tests passing in < 0.40s", "VERIFIED (22/22 Passed)"],
         ["Capstone Deliverables", "Report PDF, Presentation PDF, Walkthrough Video & Repo", "READY FOR FINAL EVALUATION"],
     ]
     t_conc = Table(conc_data, colWidths=[170, 310, 232])

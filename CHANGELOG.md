@@ -9,6 +9,9 @@ All notable technical and architectural decisions for the **Learner Assessment &
 ### Ingestion Engine & Mathematical Rigor
 - **Added:** Mathematical validation using `math.isfinite()` in `code/main.py` and `code/models.py` to intercept `NaN`, `+Infinity`, and `-Infinity` float values, preventing silent bypass of numerical bounds and constraint corruption in SQLite.
 - **Changed:** Transitioned SQLite ingestion policy from destructive `INSERT OR REPLACE` to deterministic `INSERT INTO learners (...) ON CONFLICT(learner_id) DO UPDATE SET`, preserving primary key row identity and preventing foreign key cascading side-effects during re-ingestion.
+- **Added:** Full database idempotency for `system_audit_log` with unique constraint `(event_type, learner_id)` and `ON CONFLICT DO UPDATE`, ensuring repeated file ingestion does not multiply audit event entries.
+- **Added:** Strict column count validation in CSV streaming reader: rows with too few or extra columns are safely rejected as malformed without crashing.
+- **Changed:** Replaced silent coercing of unrecognized `enrollment_status` values with strict rejection and logging as malformed records.
 - **Added:** Robust CSV header normalization routine stripping whitespace, lowercasing, and mapping hyphens to underscores before `csv.reader` dictionary mapping.
 - **Added:** Graceful processing of header-only CSV files (0 data rows) resulting in clean status `COMMITTED` without unhandled exceptions.
 - **Changed:** Refactored `configure_logger()` to enforce mandatory external activity logging: failure to create or append to `application_activity.log` now raises a fatal `RuntimeError` rather than silently continuing console-only.
@@ -16,13 +19,13 @@ All notable technical and architectural decisions for the **Learner Assessment &
 ### Linux Systems Administration & Security Hardening
 - **Changed:** Hardened permission matrix in `scripts/setup_linux_env.sh` to `chmod 660` for database files (`data/*.db`) and directory, enabling group write transactions for non-root operators.
 - **Changed:** Configured `sprints_ops` as the **Primary Group** (`usermod -g sprints_ops mw851`, `gid=1003`) rather than a secondary group, verified via `id mw851`.
-- **Added:** Functional SQLite write permission test in `scripts/setup_linux_env.sh` executing a temporary table creation, row insertion, and table drop transaction as the non-root operator.
+- **Added:** Safe functional SQLite write permission test in `scripts/setup_linux_env.sh` utilizing dynamic unique probe table names (`_sqlite_write_probe_$$`) and clean teardown, eliminating any risk to existing tables.
 - **Changed:** Fixed `scripts/monitor_process.sh` to remove error suppression (`|| true`), capturing and verifying the exact application exit status (`$?`).
 - **Changed:** Corrected Linux distribution version in `logs/linux_operations.log` to `Ubuntu 26.04.1 LTS (Resolute Raccoon)` matching the host WSL2 environment.
 
 ### Verification & Documentation Deliverables
-- **Added:** Expanded automated test suite in `tests/test_ingestion.py` and `tests/test_models.py` to 20 comprehensive unit tests covering NaN rejection, Infinity handling, non-finite bounds, header-only CSVs, duplicate updates, and functional SQLite write transactions (20/20 passed in < 0.40s).
-- **Added:** Comprehensive Demo Video Narration Script `docs/DEMO_SCRIPT.md` detailing all 8 video scenes.
+- **Added:** Expanded automated test suite in `tests/test_ingestion.py` and `tests/test_models.py` to 22 comprehensive unit tests covering column count mismatches, invalid status rejection, audit idempotency, NaN rejection, Infinity handling, non-finite bounds, header-only CSVs, duplicate updates, and functional SQLite write transactions (22/22 passed in < 0.40s).
+- **Added:** Comprehensive Demo Video Narration Script `docs/DEMO_SCRIPT.md` (and synchronized root `DEMO_SCRIPT.md`) detailing all 8 video scenes.
 - **Updated:** Updated `docs/PROJECT_CHARTER.md`, `README.md`, `docs/System_Architecture_Report.pdf`, and `docs/Capstone_Presentation.pdf`.
 
 ---

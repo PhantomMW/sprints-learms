@@ -164,7 +164,7 @@ Represents technical mentors and educators managing cohorts:
 To eliminate anomalies inherent in flat CSV files (such as cohort name redundancy, update anomalies, and inconsistent casing), the relational database `data/sprints_learners.db` organizes data into normalized tables complying with Third Normal Form (3NF):
 
 - **Relationship:** One-to-Many (`1:N`) between `Cohorts` and `Learners`. One cohort contains many enrolled learners; each learner belongs to exactly one cohort.
-- **Referential Integrity:** Enforced via `PRAGMA foreign_keys = ON;` in SQLite. Deleting or updating a cohort cascades according to business rules.
+- **Referential Integrity:** Enforced via `PRAGMA foreign_keys = ON;` in SQLite. Cohort updates cascade (`ON UPDATE CASCADE`), while deletions are strictly restricted (`ON DELETE RESTRICT`) to prevent accidental record loss and preserve learner historical integrity.
 - **Indexing:** Dedicated B-Tree indexes created on `learners.cohort_id` and `learners.is_audited` to support instant reporting for employer partners.
 
 ```text
