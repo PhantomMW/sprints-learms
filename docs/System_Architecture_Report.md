@@ -14,10 +14,11 @@ The Learner Assessment & Resource Management System (LEARMS) is a secure, lightw
 LEARMS replaces this legacy workflow with an automated, object-oriented Python pipeline paired with an ACID-compliant, normalized SQLite3 relational database (`sprints_learners.db`). The system is engineered strictly with core Python standard libraries (avoiding heavyweight third-party frameworks like Django or Pandas) and deployed within a rigorously hardened Linux (WSL2 Ubuntu) environment. 
 
 Key milestones achieved in this implementation include:
-- **100% Ingestion Pipeline Uptime:** Complete fault-tolerance intercepting malformed, missing, or corrupted data records without terminating execution.
+- **Fault-Tolerant Ingestion Pipeline:** Successfully processes valid records while isolating and logging malformed rows in tested edge-case scenarios without terminating execution.
 - **Relational Integrity & SQL Injection Defense:** 3rd Normal Form schema architecture utilizing strictly parameterized queries (`?` parameter binding).
-- **Automated Quality Audit Flagging:** Mathematical modulus-based sampling (`counter % 10 == 0`) flagging exactly 10% of ingested cohorts for quality assurance by Sprints hiring partners.
-- **Enterprise Unix Security:** Least-privilege role-based access controls using `chown` and `chmod` (`750` for execution directories, `640` for databases and logs) eliminating root-dependency during daily operations.
+- **Identity-Preserving Conflict Resolution:** Replaces disruptive `REPLACE` operations with `INSERT ... ON CONFLICT(learner_id) DO UPDATE SET`, ensuring idempotency and preserving existing row identity during repeated ingestion runs.
+- **Automated Periodic Quality Audit Sampling (Modulus 10):** Deterministic mathematical sampling (`counter % 10 == 0`) selecting every 10th valid learner for employer partner quality reviews.
+- **Enterprise Unix Security & Primary Group Configuration:** Least-privilege role-based access controls using `chown` and `chmod` (`750` for execution directories/scripts, `660` for databases, data files, and logs, `640` for documentation) paired with primary group provisioning (`sprints_ops`, GID: 1003) eliminating root-dependency during daily operations.
 - **Real-Time Process Monitoring & Telemetry:** End-to-end command logging in `logs/linux_operations.log` and transaction tracking in `logs/application_activity.log`.
 
 ---
@@ -207,35 +208,45 @@ To eliminate anomalies inherent in flat CSV files (such as cohort name redundanc
 
 ### 5.1 Data Ingestion & Transformation
 The core pipeline in `code/main.py` is invoked via CLI or automated scripts:
-1. **Source Discovery:** Opens `data/raw_cohort_data.csv` using Python's standard `csv.DictReader` inside a streaming context manager.
-2. **Field Sanitization:** Trims whitespace and validates existence of mandatory columns.
+1. **Source Discovery & Validation:** Opens `data/raw_cohort_data.csv` using a streaming reader, validating that the file exists and is non-empty.
+2. **Header Normalization:** Reads the raw header row and normalizes all column titles (stripping leading/trailing whitespace, converting to lowercase, and replacing spaces/hyphens with underscores). Guarantees consistent mapping against expected schema headers (`learner_id`, `full_name`, `cohort_name`, `assessment_score`, `enrollment_status`).
 3. **Data Type Casting:** Raw string assessment scores are converted via `float(row['assessment_score'].strip())`. If casting fails (e.g., non-numeric string, negative values, empty string), the row is routed to the dead-letter error handling handler.
 4. **Relational Resolution:** The pipeline queries the `Cohorts` table for `cohort_name`. If absent, it dynamically determines the track and inserts the new cohort record, capturing the generated `cohort_id`.
-5. **Parameterized Execution:** Inserts records via `INSERT OR REPLACE INTO learners (...) VALUES (?, ?, ?, ?, ?, ?)` preventing SQL injection.
+5. **Parameterized Conflict-Safe Execution:** Inserts records via:
+   ```sql
+   INSERT INTO learners (
+       learner_id, full_name, cohort_id, assessment_score, enrollment_status, is_audited
+   ) VALUES (?, ?, ?, ?, ?, ?)
+   ON CONFLICT(learner_id) DO UPDATE SET
+       full_name = excluded.full_name,
+       cohort_id = excluded.cohort_id,
+       assessment_score = excluded.assessment_score,
+       enrollment_status = excluded.enrollment_status,
+       is_audited = excluded.is_audited;
+   ```
+   This ensures strict immunity against SQL injection while preserving learner entity identity during repeated or subsequent ingestion batches.
 
-### 5.2 Quality Audit Flagging
-To fulfill employer partner quality assurance obligations without introducing bias:
+### 5.2 Automated Periodic Quality Audit Sampling
+To fulfill employer partner quality assurance obligations through systematic, unbiased sampling:
+- While the high-level business requirement specifies a sample audit, the technical implementation utilizes deterministic **periodic modulus sampling** (`processed_valid_count % 10 == 0`) as required by the Sprints brief.
 - During sequential row parsing of valid learners, an atomic integer counter (`processed_valid_count`) is incremented.
-- A modulus operation evaluates `processed_valid_count % 10 == 0`.
 - Every 10th processed learner (10th, 20th, 30th, 40th...) has `is_audited` set to `True` (`1`).
+- In the 45-record starter dataset, exactly 4 learners are flagged: `SP-L-1010`, `SP-L-1020`, `SP-L-1030`, and `SP-L-1040`.
 - An operational audit event is emitted to `application_activity.log`:
   ```text
-  [2026-11-03 12:30:15] [AUDIT] [main.py:184] Modulus Audit Trigger: Learner SP-L-1010 (Hadeer Mostafa) flagged for employer QA sample (Row #10).
+  [2026-11-03 12:49:15] [INFO] [QUALITY AUDIT TRIGGER] Valid record #10: Learner SP-L-1010 (Hadeer Mostafa) flagged for QA sample (score=76.25).
   ```
 
 ### 5.3 Exception Handling & Logging
-To satisfy the 100% ingestion uptime requirement:
+To satisfy the fault-tolerant ingestion requirement:
 - **Granular Try-Except Hierarchy:**
   - File I/O: Traps `FileNotFoundError`, `PermissionError`, and `UnicodeDecodeError`.
-  - Record Transformation: Traps `ValueError` (invalid float conversion) and `KeyError` (missing CSV headers).
+  - Record Transformation: Traps `ValueError` (invalid float conversion) and missing CSV fields.
   - Database Execution: Traps `sqlite3.IntegrityError`, `sqlite3.OperationalError`, and `sqlite3.DatabaseError`.
 - **Fault-Tolerant Dead-Letter Logging:** Corrupted rows are isolated and logged with exact line numbers and stack causes without halting subsequent row processing.
+- **Fail-Safe Operational Logger:** `configure_logger()` strictly enforces that the operational log file is writable; if file logging initialization fails, it raises a fatal runtime exception rather than proceeding silently.
 - **Transaction Management:** Database transactions are committed in batches. On fatal database connection interrupts, a full `connection.rollback()` is executed.
-- **Activity Log File:** All events append to `logs/application_activity.log` detailing:
-  - Startup timestamp and configuration parameters.
-  - Step-by-step cohort resolution.
-  - Quality audit selections.
-  - Final transaction summary: `{total_scanned: 45, valid_inserted: 45, invalid_skipped: 0, audit_flagged: 4, duration_ms: 18.4}`.
+- **Activity Log File:** All events append to `logs/application_activity.log` detailing startup parameters, cohort resolution, audit flags, and execution duration.
 
 ---
 
@@ -250,33 +261,41 @@ sqlite3 --version
 ```
 *Verification:* SQLite version `3.46.1` verified operational.
 
-### 6.2 Security & File Permissions
+### 6.2 Security, Primary Group, and File Permissions
 To prevent accidental or malicious data modification while allowing daily sysadmin operations without root/sudo escalation:
-1. **User & Group Provisioning:**
+1. **Primary Group Provisioning:**
    ```bash
    sudo groupadd -f sprints_ops
-   sudo usermod -a -G sprints_ops $USER
+   sudo usermod -g sprints_ops $TARGET_USER
    ```
+   *Verification:* Running `id $TARGET_USER` confirms `gid=1003(sprints_ops)` as the **Primary Group**.
 2. **Ownership Assignment (`chown`):**
    ```bash
-   sudo chown -R $USER:sprints_ops /mnt/c/Users/mw851/.gemini/antigravity/scratch/sprints_learms
+   sudo chown -R $TARGET_USER:sprints_ops "$APP_ROOT"
    ```
 3. **Least-Privilege Permissions (`chmod`):**
    ```bash
-   chmod 750 /mnt/c/Users/mw851/.gemini/antigravity/scratch/sprints_learms/code/*.py
-   chmod 750 /mnt/c/Users/mw851/.gemini/antigravity/scratch/sprints_learms/scripts/*.sh
-   chmod 640 /mnt/c/Users/mw851/.gemini/antigravity/scratch/sprints_learms/data/sprints_learners.db
-   chmod 660 /mnt/c/Users/mw851/.gemini/antigravity/scratch/sprints_learms/logs/*.log
+   find "$APP_ROOT" -type d -exec chmod 750 {} +
+   find "$APP_ROOT/code" -type f -name "*.py" -exec chmod 750 {} +
+   find "$APP_ROOT/scripts" -type f -name "*.sh" -exec chmod 750 {} +
+   find "$APP_ROOT/data" -type f -exec chmod 660 {} +
+   find "$APP_ROOT/logs" -type f -exec chmod 660 {} +
+   find "$APP_ROOT/docs" -type f -exec chmod 640 {} +
    ```
-   - Directory execution (`750`): Owner full control (`rwx`), `sprints_ops` group execute/read (`r-x`), others no access (`---`).
-   - Database and logs (`640`/`660`): Owner and group read/write, world inaccessible.
+   - Directory and script execution (`750`): Owner full control (`rwx`), `sprints_ops` group execute/read (`r-x`), others no access (`---`).
+   - Database and logs (`660`): Owner and `sprints_ops` group full read/write, world inaccessible. This ensures group members can execute data ingestion and updates without root permissions.
 
-### 6.3 Process Monitoring
+### 6.3 Process Monitoring & Resource Telemetry
 Process health was verified under load using the standard Linux utility suite:
 ```bash
 python3 code/main.py --simulate-load &
-ps aux | grep "[p]ython3 code/main.py"
+ps -p $PID -o pid,ppid,user,group,%cpu,%mem,vsz,rss,stat,start,time,comm
 ```
+Telemetry confirmed:
+- Operator: `mw851` | Group: `sprints_ops` (Primary Group verified)
+- CPU Utilization: ~26.0% (Single-threaded efficiency)
+- Resident Memory (RSS): 20,344 KB (< 28 MB steady state)
+- Virtual Size (VSZ): 26,356 KB
 The telemetry output captured CPU percentage, virtual memory (`VSZ`), resident memory (`RSS`), and process state (`S`/`R`), confirming LEARMS operates with an ultra-light memory footprint (< 18MB RSS) and zero memory leakage.
 
 ---

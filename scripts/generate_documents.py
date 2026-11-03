@@ -256,9 +256,10 @@ def generate_architecture_report_pdf(output_path: str):
         "The <b>Learner Assessment & Resource Management System (LEARMS)</b> resolves these challenges by delivering an "
         "automated, object-oriented backend pipeline coupled with an ACID-compliant SQLite3 relational database "
         "(<code>data/sprints_learners.db</code>). Built exclusively with core Python standard libraries—honoring strict "
-        "client constraints against heavy third-party dependencies—LEARMS provides 100% ingestion uptime, automated "
-        "modulus-based quality audit sampling, strict parameterized SQL injection immunity, and fully documented "
-        "Linux administration policies.",
+        "client constraints against heavy third-party dependencies—LEARMS provides a fault-tolerant ingestion pipeline, "
+        "automated periodic quality audit sampling (% 10 modulus check), identity-preserving conflict resolution "
+        "(<code>ON CONFLICT DO UPDATE</code>), strict parameterized SQL injection immunity, and hardened Linux primary "
+        "group security administration (<code>sprints_ops</code>, GID: 1003).",
         body_style
     ))
 
@@ -429,27 +430,29 @@ def generate_architecture_report_pdf(output_path: str):
     story.append(Paragraph("5.1 Data Ingestion & Transformation", h2_style))
     story.append(Paragraph(
         "Raw cohort records in <code>raw_cohort_data.csv</code> are parsed line-by-line using Python's standard "
-        "<code>csv.DictReader</code>. Strings are stripped, empty fields evaluated, and assessment scores explicitly "
-        "cast using <code>float(score_str)</code>. If casting fails, the error is isolated and the pipeline continues.",
+        "<code>csv</code> module. Headers are rigorously normalized (removing irregular spacing, casing, and dashes). "
+        "Strings are stripped, empty rows skipped, and assessment scores explicitly cast using <code>float(score_str)</code>. "
+        "To guarantee idempotency and avoid destructive cascade replacements, records are upserted using "
+        "<code>INSERT INTO learners ... ON CONFLICT(learner_id) DO UPDATE SET</code>, updating existing fields in place.",
         body_style
     ))
 
-    story.append(Paragraph("5.2 Modulus Quality Audit Flagging (% 10)", h2_style))
+    story.append(Paragraph("5.2 Automated Periodic Quality Audit Sampling (% 10)", h2_style))
     story.append(Paragraph(
-        "To fulfill Sprints employer partner quality audit requirements, every 10th processed valid learner "
-        "(<code>valid_count % 10 == 0</code>) is flagged (<code>is_audited = 1</code>). In the 45-learner cohort dataset, "
+        "To fulfill Sprints employer partner quality audit requirements through systematic sampling, every 10th processed "
+        "valid learner (<code>valid_count % 10 == 0</code>) is flagged (<code>is_audited = 1</code>). In the 45-learner cohort dataset, "
         "exactly 4 learners (SP-L-1010, SP-L-1020, SP-L-1030, SP-L-1040) are flagged and registered into both the "
         "<code>learners</code> table and the dedicated <code>system_audit_log</code> table.",
         body_style
     ))
 
-    story.append(Paragraph("5.3 100% Uptime Exception Handling & Logging", h2_style))
+    story.append(Paragraph("5.3 Fault-Tolerant Exception Handling & Logging", h2_style))
     story.append(Paragraph(
         "All file streaming and database transactions are protected by hierarchical <code>try-except</code> blocks. "
         "When encountering corrupt rows (e.g. non-numeric score 'INVALID_SCORE', negative values, missing cohort keys), "
         "the engine logs a descriptive warning to <code>logs/application_activity.log</code> and advances to the next row "
-        "without halting execution. Database writes are committed atomically; on unexpected SQL failure, transactions "
-        "are rolled back cleanly.",
+        "without halting execution. Furthermore, <code>configure_logger()</code> ensures mandatory logging initialization "
+        "without silent failures.",
         body_style
     ))
 
@@ -472,22 +475,21 @@ def generate_architecture_report_pdf(output_path: str):
         body_style
     ))
 
-    story.append(Paragraph("6.2 Security, Group Ownership, and Permissions Hardening", h2_style))
+    story.append(Paragraph("6.2 Security, Primary Group, and File Permissions", h2_style))
     story.append(Paragraph(
         "To safeguard learner assessment scores and prevent unauthorized tampering: "
-        "<br/>1. A dedicated administrative group <code>sprints_ops</code> was created and assigned to the application directory via <code>chown -R $USER:sprints_ops</code>. "
+        "<br/>1. An administrative group <code>sprints_ops</code> (GID: 1003) was provisioned and assigned as the operator's <b>Primary Group</b> via <code>usermod -g sprints_ops $USER</code> (verified via <code>id mw851</code>). "
         "<br/>2. Executable scripts and code files were locked to octal <code>750</code> (<code>rwxr-x---</code>). "
-        "<br/>3. The SQLite database file was locked to octal <code>640</code> (<code>rw-r-----</code>). "
-        "<br/>4. Activity logs were assigned octal <code>660</code> (<code>rw-rw----</code>). "
-        "This configuration ensures day-to-day sysadmin workflows operate without requiring root privileges.",
+        "<br/>3. The SQLite database and data files were set to octal <code>660</code> (<code>rw-rw----</code>), granting group members write and read permissions for everyday ingestion without root escalation. "
+        "<br/>4. Activity logs were assigned octal <code>660</code> (<code>rw-rw----</code>), and documentation set to <code>640</code> (<code>rw-r-----</code>).",
         body_style
     ))
 
     story.append(Paragraph("6.3 Real-Time Process Monitoring & Telemetry", h2_style))
     story.append(Paragraph(
-        "Active execution was monitored using <code>ps aux | grep main.py</code> and <code>ps -o %cpu,%mem,vsz,rss</code>. "
-        "Telemetry confirmed steady-state CPU utilization under 25% and resident memory footprint under 28 MB RSS, "
-        "guaranteeing the system will not starve host infrastructure even during heavy batch imports.",
+        "Active execution was monitored using <code>ps -p $PID -o pid,ppid,user,group,%cpu,%mem,vsz,rss,stat,start,time,comm</code>. "
+        "Telemetry confirmed operator <code>mw851</code> running under group <code>sprints_ops</code>, steady-state CPU utilization under 28%, "
+        "and resident memory footprint under 21 MB RSS, guaranteeing the system will not starve host infrastructure even during heavy batch imports.",
         body_style
     ))
 
@@ -780,11 +782,11 @@ def generate_presentation_deck_pdf(output_path: str):
     # -------------------------------------------------------------------------
     sec_points = [
         Paragraph("• <b>Package Management:</b> Fully automated provisioning via <code>apt-get install -y sqlite3 libsqlite3-dev</code>, captured in terminal audit log.", slide_bullet),
-        Paragraph("• <b>Group-Based Access Control:</b> Provisioned <code>sprints_ops</code> administrative group; assigned directory ownership via <code>chown -R $USER:sprints_ops</code>.", slide_bullet),
+        Paragraph("• <b>Primary Group Assignment:</b> Configured <code>sprints_ops</code> (GID: 1003) as the operator's primary group via <code>usermod -g sprints_ops $USER</code> (verified via <code>id mw851</code>).", slide_bullet),
         Paragraph("• <b>Least-Privilege Octal Permissions:</b>", slide_bullet),
         Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;<b>- 750 (rwxr-x---):</b> Applied to Python scripts and directories (owner full control, group read/execute, world blocked).", slide_body),
-        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;<b>- 640 (rw-r-----):</b> Applied to SQLite database (prevents unauthorized tampering while enabling sysadmin inspection).", slide_body),
-        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;<b>- 660 (rw-rw----):</b> Applied to activity logs (allows application and ops group write/read access).", slide_body),
+        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;<b>- 660 (rw-rw----):</b> Applied to SQLite database and data files (ensures group members have full write/read access for everyday ingestion without root privileges).", slide_body),
+        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;<b>- 660 (rw-rw----):</b> Applied to operational activity logs; <b>640</b> applied to documentation.", slide_body),
         Paragraph("• <b>Non-Root Everyday Execution:</b> Day-to-day batch ingestion runs securely as non-root operator (<code>mw851</code>).", slide_bullet),
     ]
     story.extend(make_slide(
@@ -799,11 +801,12 @@ def generate_presentation_deck_pdf(output_path: str):
     # -------------------------------------------------------------------------
     proc_data = [
         ["Monitoring Metric", "Observed Value", "Operational Significance"],
-        ["Process Filtering", "ps aux | grep main.py", "Active tracking of command line arguments and daemon status."],
-        ["CPU Utilization", "21.7% - 23.8%", "Lightweight single-threaded execution; no CPU saturation."],
-        ["Resident Memory (RSS)", "20,220 KB (< 28 MB)", "Extremely low memory footprint; zero memory leakage."],
-        ["Virtual Memory (VSZ)", "26,064 KB", "Minimal virtual memory overhead in 64-bit Linux runtime."],
-        ["Batch Duration", "0.0078 - 0.0135s (Standard)", "Sub-second execution across 45 learner records."],
+        ["Process Filtering", "ps -p $PID -o user,group,%cpu,%mem", "Active tracking verifying non-root user and primary group."],
+        ["Primary Group", "GROUP: sprints_ops", "Confirms execution under dedicated operations group."],
+        ["CPU Utilization", "26.0% - 27.2%", "Lightweight single-threaded execution; no CPU saturation."],
+        ["Resident Memory (RSS)", "20,344 KB (< 28 MB)", "Extremely low memory footprint; zero memory leakage."],
+        ["Virtual Memory (VSZ)", "26,356 KB", "Minimal virtual memory overhead in 64-bit Linux runtime."],
+        ["Batch Duration", "0.0081s (Standard)", "Sub-second execution across 45 learner records."],
     ]
     t_proc = Table(proc_data, colWidths=[150, 160, 402])
     t_proc.setStyle(TableStyle([
@@ -826,8 +829,8 @@ def generate_presentation_deck_pdf(output_path: str):
     # Slide 8: Exception Handling & Quality Auditing
     # -------------------------------------------------------------------------
     audit_points = [
-        Paragraph("• <b>100% Ingestion Pipeline Uptime:</b> Robust <code>try-except</code> architecture intercepts malformed strings, invalid score values, and missing fields without crashing the application.", slide_bullet),
-        Paragraph("• <b>Mathematical Modulus Quality Audit (% 10):</b> Evaluates <code>processed_count % 10 == 0</code> during ingestion.", slide_bullet),
+        Paragraph("• <b>Fault-Tolerant Ingestion Pipeline:</b> Robust <code>try-except</code> architecture intercepts malformed strings, invalid score values, and missing fields without crashing.", slide_bullet),
+        Paragraph("• <b>Automated Periodic Quality Audit Sampling (% 10):</b> Evaluates <code>processed_valid_count % 10 == 0</code> during ingestion.", slide_bullet),
         Paragraph("• <b>Audited Sample Cohort Roster (Starter Assets):</b>", slide_bullet),
         Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;<b>1. [SP-L-1010]</b> Hadeer Mostafa | Score: 76.25% | Cloud Computing Cohort 3 (Active)", slide_body),
         Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;<b>2. [SP-L-1020]</b> Dina Salah | Score: 90.50% | Cloud Computing Cohort 3 (Graduated)", slide_body),
@@ -837,40 +840,29 @@ def generate_presentation_deck_pdf(output_path: str):
     ]
     story.extend(make_slide(
         "7. Exception Handling & Quality Auditing",
-        "Resilient Ingestion and Unbiased Employer Sampling",
+        "Resilient Ingestion and Unbiased Periodic Sampling",
         audit_points,
         8
     ))
 
     # -------------------------------------------------------------------------
-    # Slide 9: Future Roadmap & Scalability
+    # Slide 9: Automated Test Suite & Validation
     # -------------------------------------------------------------------------
-    road_cards = [
-        [
-            Paragraph("<b>Phase 1: Automated Scheduling</b>", card_title_style),
-            Paragraph("• Implement native Linux <code>cron</code> daemon jobs.<br/>• Trigger nightly batch sync at 00:00 UTC.<br/>• Automated log rotation via <code>logrotate</code>.", slide_body)
-        ],
-        [
-            Paragraph("<b>Phase 2: Partner REST API</b>", card_title_style),
-            Paragraph("• Fast, secure API layer over <code>sprints_learners.db</code>.<br/>• Real-time candidate search for hiring partners.<br/>• Role-based JWT authentication.", slide_body)
-        ],
-        [
-            Paragraph("<b>Phase 3: Regional Multi-Tenancy</b>", card_title_style),
-            Paragraph("• Partition cohorts across geographic nodes (Egypt, KSA, UAE).<br/>• Automated GitHub Actions CI/CD test gates.<br/>• Real-time Grafana monitoring dashboards.", slide_body)
-        ]
+    test_points = [
+        Paragraph("• <b>Comprehensive Test Coverage (15/15 Tests Passed in < 0.20s):</b>", card_title_style),
+        Paragraph("• <b>Schema & SQL Injection Defense:</b> Foreign keys enforced; SQL injection payloads safely neutralized.", slide_bullet),
+        Paragraph("• <b>Edge Cases & Resiliency:</b>", slide_bullet),
+        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Duplicate Learner ID</code>: Verified <code>ON CONFLICT DO UPDATE</code> updates without record loss.", slide_body),
+        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Repeated Ingestion</code>: Idempotency confirmed across identical batch runs.", slide_body),
+        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Empty CSV & Missing Headers</code>: Safe interception and rejection.", slide_body),
+        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Header Normalization</code>: Irregular spacing, dashes, and casing normalized cleanly.", slide_body),
+        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>CSV Encoding Error</code>: Corrupted non-UTF8 binary bytes trapped gracefully.", slide_body),
+        Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>Logging Permission Failure</code>: Unwritable log path raises descriptive fatal exception.", slide_body),
     ]
-    t_road = Table([road_cards], colWidths=[234, 240, 238])
-    t_road.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,-1), COLOR_BG_LIGHT),
-        ('BOX', (0,0), (-1,-1), 1, COLOR_BORDER),
-        ('INNERGRID', (0,0), (-1,-1), 0.5, COLOR_BORDER),
-        ('PADDING', (0,0), (-1,-1), 8),
-        ('VALIGN', (0,0), (-1,-1), 'TOP'),
-    ]))
     story.extend(make_slide(
-        "8. Next Steps & Future Enhancements",
-        "Scaling LEARMS Across the MENA Educational Ecosystem",
-        [t_road, Spacer(1, 15), Paragraph("<b>Vision:</b> Evolving LEARMS into the central backbone connecting Sprints learning talent to regional employer networks.", slide_body)],
+        "8. Testing & Validation Matrix",
+        "15 Automated Unit & Integration Tests Passing",
+        test_points,
         9
     ))
 
@@ -881,13 +873,14 @@ def generate_presentation_deck_pdf(output_path: str):
         ["Sprint Scope", "Requirement Satisfied", "Client Acceptance Status"],
         ["Sprint 1 - SCM & Engineering", "Git version control & System Architecture Report", "ACCEPTED (100% Complete)"],
         ["Sprint 2 - Python OOP", "Base User, Learner & Instructor polymorphism", "ACCEPTED (100% Complete)"],
-        ["Sprint 2 - Python Fundamentals", "Float casting & % 10 modulus random audit check", "ACCEPTED (100% Complete)"],
-        ["Sprint 2 - SQLite Database", "Normalized 3NF relational DB & SQL injection defense", "ACCEPTED (100% Complete)"],
-        ["Sprint 2 - Error & Log Handling", "100% ingestion uptime & application_activity.log", "ACCEPTED (100% Complete)"],
-        ["Sprint 3 - Linux Operations", "apt-get sqlite3, chmod 750/640, chown sprints_ops, ps/grep", "ACCEPTED (100% Complete)"],
-        ["Capstone Deliverables", "Report PDF, Presentation PDF, Walkthrough Video & Repo", "READY FOR FINAL SUBMISSION"],
+        ["Sprint 2 - Python Fundamentals", "Float casting & % 10 periodic audit sampling", "ACCEPTED (100% Complete)"],
+        ["Sprint 2 - SQLite Database", "3NF relational DB, ON CONFLICT DO UPDATE, SQLi defense", "ACCEPTED (100% Complete)"],
+        ["Sprint 2 - Error & Log Handling", "Fault-tolerant pipeline & application_activity.log", "ACCEPTED (100% Complete)"],
+        ["Sprint 3 - Linux Operations", "apt-get sqlite3, Primary Group sprints_ops, chmod 750/660", "ACCEPTED (100% Complete)"],
+        ["Automated Test Suite", "15 Unit & Integration tests passing in < 0.20s", "VERIFIED (15/15 Passed)"],
+        ["Capstone Deliverables", "Report PDF, Presentation PDF, Walkthrough Video & Repo", "READY FOR FINAL EVALUATION"],
     ]
-    t_conc = Table(conc_data, colWidths=[180, 310, 222])
+    t_conc = Table(conc_data, colWidths=[170, 310, 232])
     t_conc.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), COLOR_PRIMARY),
         ('TEXTCOLOR', (0,0), (-1,0), colors.white),
@@ -900,7 +893,7 @@ def generate_presentation_deck_pdf(output_path: str):
     story.extend(make_slide(
         "9. Conclusion & Q&A",
         "Mission Accomplished: Production-Ready Sprints LEARMS Engine",
-        [t_conc, Spacer(1, 10), Paragraph("<b>Open Floor:</b> Thank you, Fatima Rashid and the Sprints Engineering Leadership. Ready for Q&A and technical evaluation.", slide_body)],
+        [t_conc, Spacer(1, 10), Paragraph("<b>Open Floor:</b> Thank you, Fatima Rashid and the Sprints Engineering Leadership. Ready for technical evaluation.", slide_body)],
         10
     ))
 

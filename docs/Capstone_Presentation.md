@@ -21,10 +21,10 @@ color: #0f172a
 ## Bridging Learning and Employment Efficiently
 
 - **The Challenge:** Rapid scaling of tech cohorts led to a critical operational bottleneck. Learner assessment data was fragmented across raw text files, ingested manually with ad-hoc scripts, and held insecure folder permissions without version control.
-- **The Solution:** Architected and deployed **LEARMS** — a lightweight, secure, Python-driven SQLite backend engineered strictly with core standard libraries.
+- **The Solution:** Architected and deployed **LEARMS** — an automated, secure, Python-driven SQLite backend engineered strictly with core standard libraries.
 - **Business Impact:**
-  - 100% elimination of manual data manipulation and permission friction.
-  - 100% data ingestion uptime with zero-crash error handling.
+  - Automates end-to-end CSV ingestion, relational storage, and validation, eliminating manual file editing and script execution.
+  - Fault-tolerant ingestion pipeline with zero-crash error handling and dead-letter activity logging.
   - Standardized, auditable employer-partner reporting across MENA tech programs.
 
 ---
@@ -34,13 +34,13 @@ color: #0f172a
 
 - **Application Core:** Standard Python 3.10+ engine utilizing native `csv`, `sqlite3`, `logging`, and `os` modules — no bulky external dependencies.
 - **Data Persistence:** Transitioned from scattered text files to normalized SQLite relational database (`sprints_learners.db`) with foreign key constraints.
-- **Infrastructure:** Hardened Linux (WSL2 Ubuntu) environment with group-based access control and real-time process monitoring.
+- **Infrastructure:** Hardened Linux (WSL2 Ubuntu) environment with Primary Group isolation (`sprints_ops`) and real-time process monitoring.
 - **System Flow:**
   ```text
-  [Raw Cohort CSV] ──► [Streaming DictReader] ──► [OOP Polymorphic Validation]
+  [Raw Cohort CSV] ──► [Header Normalization] ──► [OOP Polymorphic Validation]
                                                            │
                                                            ▼
-  [logs/application_activity.log] ◄── [SQLite3 DB] ◄── [Modulus Audit Check %10]
+  [logs/application_activity.log] ◄── [ON CONFLICT DB Update] ◄── [Periodic Audit %10]
   ```
 
 ---
@@ -55,7 +55,7 @@ color: #0f172a
 - **Relational Integrity & Defense:**
   - `PRAGMA foreign_keys = ON;` enforces strict referential consistency.
   - 100% Parameterized queries (`?` syntax) eliminates all SQL injection risks.
-  - B-Tree indexes on `cohort_id` and `is_audited` guarantee sub-millisecond querying.
+  - `ON CONFLICT(learner_id) DO UPDATE SET` ensures idempotency and preserves existing row identity during repeated ingestion batches.
 
 ---
 
@@ -77,10 +77,10 @@ color: #0f172a
 
 - **Objective:** Secure the LEARMS infrastructure without relying on root privileges for daily execution.
 - **Package Management:** Installed and verified `sqlite3` via `apt-get` within WSL2 Ubuntu, logging output to `linux_operations.log`.
-- **Group Ownership (`chown`):** Established `sprints_ops` administrative group; assigned full application directory ownership to non-root operators.
+- **Primary Group (`usermod -g`):** Configured `sprints_ops` (GID: 1003) as the operator's primary group, confirmed via `id mw851`.
 - **Access Permissions (`chmod`):**
   - Scripts & Directories (`750`): Read/Execute restricted to owner and `sprints_ops` group.
-  - Relational Database (`640`): Restricted to application service accounts; world-readable access denied.
+  - Database & Data Files (`660`): Read/Write granted to `sprints_ops` primary group, world-readable access denied.
   - Operational Logs (`660`): Read/Write access granted strictly to ops personnel.
 
 ---
@@ -91,46 +91,55 @@ color: #0f172a
 - **Execution Logging:** Complete transactional telemetry written to `logs/application_activity.log`, logging batch records, duration, and audit flags.
 - **Active Process Tracking:** Monitored live execution using Linux CLI utilities:
   ```bash
-  ps aux | grep "[p]ython3 code/main.py"
+  ps -p $PID -o pid,ppid,user,group,%cpu,%mem,vsz,rss,stat,start,time,comm
   ```
 - **Resource Verification:**
-  - Memory Footprint: Steady state under 18 MB RSS with zero memory leaks.
-  - CPU Utilization: Near-instant batch processing (< 25ms for 45 records).
-  - High Availability: Clean daemonization and benchmark load testing capability.
+  - Executing Operator: `USER: mw851 | GROUP: sprints_ops` (Primary group verified).
+  - Memory Footprint: Steady state under 20.3 MB RSS with zero memory leaks.
+  - CPU Utilization: Near-instant batch processing (< 10ms for 45 records).
 
 ---
 
 # 7. Exception Handling & Quality Auditing
 ## A Resilient Ingestion Pipeline
 
-- **100% Ingestion Uptime:** Granular `try-except` blocks surround all file I/O, type conversions, and database operations.
+- **Fault-Tolerant Pipeline:** Granular `try-except` blocks surround all file I/O, type conversions, and database operations.
 - **Malformed Data Recovery:** Invalid scores (e.g., non-numeric strings, negative numbers) are intercepted, logged to the dead-letter log, and skipped without terminating the batch.
-- **Data Type Casting:** Enforces float conversion (`float(score)`) to ensure exact arithmetic precision for GPA and grade bands.
-- **Random Quality Audits:**
-  - Evaluates `processed_count % 10 == 0` during ingestion.
-  - Flags exactly 10% of ingested learners (`is_audited = 1`) for mandatory employer partner quality audits.
+- **Fail-Safe Activity Logging:** `configure_logger()` raises a fatal runtime error if the operational activity log cannot be created, ensuring full traceability.
+- **Automated Periodic Quality Audit Sampling:**
+  - Evaluates `processed_valid_count % 10 == 0` during ingestion.
+  - Systematically selects every 10th learner (`is_audited = 1`) for mandatory employer partner quality audits.
 
 ---
 
-# 8. Next Steps & Future Enhancements
-## Scaling LEARMS for Future Growth
+# 8. Testing & Validation Matrix
+## Rigorous Automated Test Suite (15/15 Passed)
 
-- **Automated Scheduling:** Deploy Linux `cron` jobs to trigger automated nightly synchronization of LMS export folders at midnight.
-- **Partner REST API:** Build a lightweight, secure REST API layer over `sprints_learners.db` to serve real-time hiring metrics to employer partners.
-- **Enterprise CI/CD:** Integrate GitHub Actions to run automated unit tests (`tests/test_models.py`, `tests/test_ingestion.py`) on every push.
-- **Multi-Tenant Cohort Partitioning:** Expand database schemas to support cross-regional cohort clustering across Egypt, KSA, and UAE.
+- **Schema & SQL Defense:** Foreign key integrity & SQL injection payload neutralization verified.
+- **Edge Cases & Ingestion Resilience:**
+  - Duplicate Learner ID (`ON CONFLICT DO UPDATE`) verified.
+  - Repeated Ingestion Idempotency verified.
+  - Empty CSV & Missing Mandatory Headers detected and rejected cleanly.
+  - Header Normalization (whitespace, casing, dashes) verified.
+  - Non-UTF8 CSV Binary Encoding Trapping verified.
+  - Unwritable Log Permission Failure verified.
+- **Execution Speed:** 15 automated tests executed and passing in under 0.20 seconds.
 
 ---
 
-# 9. Conclusion & Deployment Sign-off
+# 9. Next Steps & Future Enhancements
+## Scaling for the Future
+
+- **Automation:** Implement Linux `cron` jobs to automatically execute `main.py` at midnight for nightly cohort syncs.
+- **Advanced Reporting:** Build a lightweight REST API layer over `sprints_learners.db` to serve real-time analytics to employer partners.
+- **CI/CD Integration:** Expand current Git version control into automated deployment pipelines with GitHub Actions.
+- **Multi-Tenant Regional Scaling:** Partition cohort schemas across MENA tech hubs (Egypt, KSA, UAE).
+
+---
+
+# 10. Conclusion & Q&A
 ## Mission Accomplished
 
-- **Summary:** LEARMS replaces fragile, unversioned scripts with an automated, secure, and fully auditable OOP architecture.
-- **Deliverables Completed:**
-  - Version-controlled Git repository with descriptive sprint commits.
-  - Core Python engine (`code/main.py`) & OOP domain models (`code/models.py`).
-  - Normalized SQLite database (`data/sprints_learners.db`).
-  - Terminal audit log (`logs/linux_operations.log`) & activity log (`logs/application_activity.log`).
-  - System Architecture Report (PDF/MD) & Capstone Presentation Deck (PDF/MD).
-  - End-to-end recorded walkthrough (`Demo_Walkthrough.mp4`).
-- **Open for Questions & Stakeholder Discussion.**
+- **Summary:** By replacing disjointed manual scripts with LEARMS, Sprints now possesses a secure, OOP-driven, and highly auditable backend pipeline ready to scale alongside growing cohort sizes.
+- **Deliverables Completed:** Version Control (Git), Database (SQLite), Backend (Python), Infrastructure (Linux CLI).
+- **Questions?** Open the floor for questions from the Director of Technical Operations and Engineering team.

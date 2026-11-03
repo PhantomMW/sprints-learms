@@ -42,8 +42,6 @@ def configure_logger(log_file_path: str) -> logging.Logger:
     Returns:
         logging.Logger: Configured logger instance.
     """
-    os.makedirs(os.path.dirname(os.path.abspath(log_file_path)), exist_ok=True)
-
     logger = logging.getLogger("LEARMS_Engine")
     logger.setLevel(logging.INFO)
 
@@ -58,12 +56,20 @@ def configure_logger(log_file_path: str) -> logging.Logger:
 
     # 1. File Handler (Appends events to application_activity.log)
     try:
+        log_dir = os.path.dirname(os.path.abspath(log_file_path))
+        if log_dir:
+            os.makedirs(log_dir, exist_ok=True)
         file_handler = logging.FileHandler(log_file_path, mode="a", encoding="utf-8")
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(log_format)
         logger.addHandler(file_handler)
-    except (IOError, PermissionError) as err:
-        print(f"[FATAL ERROR] Cannot bind log file at '{log_file_path}': {err}", file=sys.stderr)
+    except (IOError, PermissionError, OSError) as err:
+        err_msg = (
+            f"Critical Logging Failure: Mandatory application activity log cannot be created "
+            f"or opened for appending at '{log_file_path}'. Cause: {err}"
+        )
+        print(f"[FATAL ERROR] {err_msg}", file=sys.stderr)
+        raise RuntimeError(err_msg) from err
 
     # 2. Console Handler for real-time CLI visibility
     console_handler = logging.StreamHandler(sys.stdout)
@@ -282,11 +288,18 @@ class IngestionPipeline:
         self.logger.info("Starting Ingestion Batch: '%s'", csv_path)
         self.logger.info("=" * 65)
 
-        # 1. Validate File Existence
+        # 1. Validate File Existence and Non-Empty Status
         if not os.path.exists(csv_path):
             err_msg = f"Raw CSV source file not found at '{csv_path}'"
             self.logger.error("[FATAL FILE ERROR] %s", err_msg)
             metrics["transaction_status"] = "FAILED: FILE NOT FOUND"
+            return metrics
+
+        if os.path.getsize(csv_path) == 0:
+            err_msg = f"Raw CSV source file at '{csv_path}' is empty (0 bytes)"
+            self.logger.error("[FATAL FILE ERROR] %s", err_msg)
+            metrics["transaction_status"] = "FAILED: EMPTY FILE"
+            self._log_transaction_summary(metrics)
             return metrics
 
         # 2. Open Database Connection
@@ -298,30 +311,55 @@ class IngestionPipeline:
             metrics["transaction_status"] = "FAILED: DB CONNECTION REFUSED"
             return metrics
 
-        # 3. Stream & Parse CSV
+        # 3. Stream, Normalize & Parse CSV
         try:
             with open(csv_path, mode="r", encoding="utf-8-sig") as csv_handle:
-                reader = csv.DictReader(csv_handle)
+                csv_raw_reader = csv.reader(csv_handle)
 
-                # Validate CSV headers
+                # Extract and normalize headers
+                try:
+                    raw_headers = next(csv_raw_reader)
+                except StopIteration:
+                    self.logger.error("[EMPTY CSV ERROR] CSV file contains no rows.")
+                    metrics["transaction_status"] = "FAILED: EMPTY FILE"
+                    self._log_transaction_summary(metrics)
+                    return metrics
+
+                # Header Normalization: strip whitespace, lowercase, normalize delimiters
+                normalized_headers = [
+                    h.strip().lower().replace(" ", "_").replace("-", "_").strip('"\'')
+                    for h in raw_headers if h is not None
+                ]
+
                 expected_headers = {"learner_id", "full_name", "cohort_name", "assessment_score", "enrollment_status"}
-                if not reader.fieldnames or not expected_headers.issubset(set(h.strip() for h in reader.fieldnames)):
+                if not expected_headers.issubset(set(normalized_headers)):
                     self.logger.error(
-                        "[INVALID CSV FORMAT] Headers do not contain required fields: Expected %s, Found %s",
+                        "[INVALID CSV FORMAT] Headers do not contain required fields: Expected %s, Found %s (Normalized: %s)",
                         expected_headers,
-                        reader.fieldnames,
+                        raw_headers,
+                        normalized_headers,
                     )
                     metrics["transaction_status"] = "FAILED: MALFORMED HEADERS"
+                    self._log_transaction_summary(metrics)
                     return metrics
 
                 cursor = conn.cursor()
 
-                for row_idx, raw_row in enumerate(reader, start=1):
+                for row_idx, row_values in enumerate(csv_raw_reader, start=1):
                     metrics["total_rows_scanned"] += 1
 
                     # Optional simulated load for Linux process monitoring
                     if simulate_load:
                         time.sleep(load_delay)
+
+                    # Skip empty rows gracefully
+                    if not row_values or all(not v.strip() for v in row_values):
+                        metrics["invalid_rows_skipped"] += 1
+                        self.logger.warning("[EMPTY ROW SKIPPED] Row #%d contains no values.", row_idx)
+                        continue
+
+                    # Construct dictionary using normalized headers
+                    raw_row = dict(zip(normalized_headers, [v.strip() for v in row_values]))
 
                     # Robust record processing with exception intercept
                     is_valid, parsed_data, error_reason = self._sanitize_and_validate_row(raw_row, row_idx)
@@ -343,7 +381,7 @@ class IngestionPipeline:
                     score_float = parsed_data["assessment_score"]
                     status = parsed_data["enrollment_status"]
 
-                    # Modulus Operation: Flag every 10th valid learner for random quality audit
+                    # Modulus Operation: Flag every 10th valid learner for quality audit
                     # (Sprint 2 - Python Fundamentals requirement)
                     current_valid_count = metrics["valid_records_ingested"] + 1
                     is_audited = (current_valid_count % 10 == 0)
@@ -378,11 +416,18 @@ class IngestionPipeline:
                     cohort_id = self.db.get_or_create_cohort(conn, cohort_name)
 
                     # Parameterized SQL execution strictly preventing SQL Injection
+                    # Using ON CONFLICT(learner_id) DO UPDATE to preserve row identity during re-ingestion
                     cursor.execute(
                         """
-                        INSERT OR REPLACE INTO learners (
+                        INSERT INTO learners (
                             learner_id, full_name, cohort_id, assessment_score, enrollment_status, is_audited
-                        ) VALUES (?, ?, ?, ?, ?, ?);
+                        ) VALUES (?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(learner_id) DO UPDATE SET
+                            full_name = excluded.full_name,
+                            cohort_id = excluded.cohort_id,
+                            assessment_score = excluded.assessment_score,
+                            enrollment_status = excluded.enrollment_status,
+                            is_audited = excluded.is_audited;
                         """,
                         (
                             learner_entity.learner_id,
@@ -412,6 +457,11 @@ class IngestionPipeline:
                 metrics["transaction_status"] = "COMMITTED"
                 self.logger.info("Database transaction committed successfully.")
 
+        except (UnicodeDecodeError, UnicodeError) as enc_err:
+            self.logger.error("[CSV ENCODING ERROR] Unable to decode CSV source with UTF-8: %s", enc_err)
+            if conn:
+                conn.rollback()
+            metrics["transaction_status"] = "FAILED: CSV ENCODING ERROR"
         except (IOError, csv.Error) as file_err:
             self.logger.error("[FILE I/O ERROR] Unexpected error while streaming CSV: %s", file_err)
             if conn:
@@ -451,8 +501,11 @@ class IngestionPipeline:
                 (is_valid, parsed_dict, failure_reason)
         """
         try:
-            # 1. Clean string keys and values
-            cleaned = {k.strip(): (v.strip() if v else "") for k, v in raw_row.items() if k}
+            # 1. Clean string keys and values with header normalization
+            cleaned = {
+                str(k).strip().lower().replace(" ", "_").replace("-", "_"): (str(v).strip() if v is not None else "")
+                for k, v in raw_row.items() if k is not None
+            }
 
             learner_id = cleaned.get("learner_id", "")
             full_name = cleaned.get("full_name", "")
