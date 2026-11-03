@@ -4,7 +4,7 @@
 [![Database](https://img.shields.io/badge/Database-SQLite3%20Normalized-003B57?logo=sqlite&logoColor=white)](#)
 [![OS Environment](https://img.shields.io/badge/Environment-Linux%20%7C%20WSL2%20Ubuntu-FCC624?logo=linux&logoColor=black)](#)
 [![SCM](https://img.shields.io/badge/Version%20Control-Git%20Structured-F05032?logo=git&logoColor=white)](#)
-[![Tests](https://img.shields.io/badge/Automated%20Tests-23%2F23%20Passing-10B981)](#)
+[![Tests](https://img.shields.io/badge/Automated%20Tests-24%2F24%20Passing-10B981)](#)
 [![Fault Tolerance](https://img.shields.io/badge/Ingestion%20Pipeline-Fault%20Tolerant-008DDA)](#)
 
 > **Client:** Sprints (EdTech & Talent-Development Platform, MENA)  
@@ -176,7 +176,7 @@ Execute the full test suite verifying OOP models, database integrity, idempotenc
 ```bash
 python -m unittest discover -s tests -p "test_*.py" -v
 ```
-**Execution Evidence (23/23 Passed):**
+**Execution Evidence (24/24 Passed):**
 ```text
 test_csv_column_count_mismatch_rejected (test_ingestion.TestIngestionAndDatabase) ... ok
 test_csv_encoding_error (test_ingestion.TestIngestionAndDatabase) ... ok
@@ -202,7 +202,8 @@ test_learner_inheritance_and_polymorphism (test_models.TestDomainModels) ... ok
 test_score_grade_boundaries (test_models.TestDomainModels) ... ok
 test_score_non_finite_and_out_of_bounds_validation (test_models.TestDomainModels) ... ok
 ----------------------------------------------------------------------
-Ran 23 tests in 0.384s - OK
+test_migration_preserves_system_audit_events_with_null_learner_id (test_ingestion.TestIngestionAndDatabase) ... ok
+Ran 24 tests in 0.380s - OK
 ```
 
 ---

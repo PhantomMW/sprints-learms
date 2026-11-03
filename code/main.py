@@ -161,12 +161,15 @@ class DatabaseManager:
         );
         """
 
-        # Automated migration query to purge duplicate audit events if upgrading a legacy database
+        # Automated migration query to purge duplicate audit events if upgrading a legacy database.
+        # Strictly targets records with non-null learner_id so independent system events (learner_id IS NULL) are never lost.
         migration_dedup_sql = """
         DELETE FROM system_audit_log
-        WHERE log_id NOT IN (
+        WHERE learner_id IS NOT NULL
+          AND log_id NOT IN (
             SELECT MAX(log_id)
             FROM system_audit_log
+            WHERE learner_id IS NOT NULL
             GROUP BY event_type, learner_id
         );
         """
@@ -176,7 +179,9 @@ class DatabaseManager:
         CREATE INDEX IF NOT EXISTS idx_learners_cohort ON learners (cohort_id);
         CREATE INDEX IF NOT EXISTS idx_learners_audit ON learners (is_audited);
         CREATE INDEX IF NOT EXISTS idx_cohorts_name ON cohorts (cohort_name);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_audit_event_learner ON system_audit_log (event_type, learner_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_audit_event_learner
+        ON system_audit_log (event_type, learner_id)
+        WHERE learner_id IS NOT NULL;
         """
 
         conn = None
@@ -475,7 +480,7 @@ class IngestionPipeline:
                             """
                             INSERT INTO system_audit_log (event_type, learner_id, message)
                             VALUES (?, ?, ?)
-                            ON CONFLICT(event_type, learner_id) DO UPDATE SET
+                            ON CONFLICT(event_type, learner_id) WHERE learner_id IS NOT NULL DO UPDATE SET
                                 message = excluded.message,
                                 timestamp = CURRENT_TIMESTAMP;
                             """,

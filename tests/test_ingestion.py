@@ -430,6 +430,75 @@ class TestIngestionAndDatabase(unittest.TestCase):
                 )
         check_conn.close()
 
+    def test_migration_preserves_system_audit_events_with_null_learner_id(self):
+        """Verify initialize_schema preserves all independent audit events where learner_id IS NULL."""
+        legacy_db_path = os.path.join(self.test_dir.name, "legacy_null_audit_test.db")
+        raw_conn = sqlite3.connect(legacy_db_path)
+        with raw_conn:
+            raw_conn.execute("""
+                CREATE TABLE system_audit_log (
+                    log_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    event_type TEXT NOT NULL,
+                    learner_id TEXT,
+                    message TEXT NOT NULL,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            # Multiple system-level audit events of the SAME event_type with learner_id IS NULL
+            raw_conn.execute(
+                "INSERT INTO system_audit_log (event_type, learner_id, message) VALUES (?, NULL, ?);",
+                ("SYSTEM_BOOT", "Kernel startup 1"),
+            )
+            raw_conn.execute(
+                "INSERT INTO system_audit_log (event_type, learner_id, message) VALUES (?, NULL, ?);",
+                ("SYSTEM_BOOT", "Kernel startup 2"),
+            )
+            raw_conn.execute(
+                "INSERT INTO system_audit_log (event_type, learner_id, message) VALUES (?, NULL, ?);",
+                ("SYSTEM_BACKUP", "Database backup completed"),
+            )
+            # Plus duplicate learner-specific events
+            raw_conn.execute(
+                "INSERT INTO system_audit_log (event_type, learner_id, message) VALUES (?, ?, ?);",
+                ("QUALITY_AUDIT_FLAG", "SP-L-1010", "Old audit row 1"),
+            )
+            raw_conn.execute(
+                "INSERT INTO system_audit_log (event_type, learner_id, message) VALUES (?, ?, ?);",
+                ("QUALITY_AUDIT_FLAG", "SP-L-1010", "Old audit row 2 (keep this)"),
+            )
+        raw_conn.close()
+
+        # Initialize schema - migration runs
+        manager = DatabaseManager(legacy_db_path, self.logger)
+        manager.initialize_schema()
+
+        # Verify all 3 NULL learner_id events are intact and not collapsed by GROUP BY
+        conn = manager.get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT log_id, event_type, message FROM system_audit_log WHERE learner_id IS NULL ORDER BY log_id;")
+        null_rows = cur.fetchall()
+        self.assertEqual(len(null_rows), 3, "All system-level audit events with NULL learner_id must be preserved")
+        self.assertEqual(null_rows[0]["message"], "Kernel startup 1")
+        self.assertEqual(null_rows[1]["message"], "Kernel startup 2")
+        self.assertEqual(null_rows[2]["message"], "Database backup completed")
+
+        # Verify learner-specific duplicate was deduplicated to 1
+        cur.execute("SELECT log_id, learner_id, message FROM system_audit_log WHERE learner_id = 'SP-L-1010';")
+        learner_rows = cur.fetchall()
+        self.assertEqual(len(learner_rows), 1)
+        self.assertEqual(learner_rows[0]["message"], "Old audit row 2 (keep this)")
+
+        # Verify new NULL learner_id event can be inserted without unique constraint error
+        with conn:
+            conn.execute(
+                "INSERT INTO system_audit_log (event_type, learner_id, message) VALUES (?, NULL, ?);",
+                ("SYSTEM_BOOT", "Kernel startup 3"),
+            )
+
+        cur.execute("SELECT COUNT(*) FROM system_audit_log WHERE learner_id IS NULL;")
+        self.assertEqual(cur.fetchone()[0], 4)
+        conn.close()
+
 
 if __name__ == "__main__":
     unittest.main()

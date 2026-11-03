@@ -103,12 +103,12 @@
 ---
 
 ## Chapter 7: Automated Test Suite & Capstone Deliverables (03:55 – 04:15)
-**Visual:** Running `python -m unittest discover -s tests -v`, showing 23/23 tests passing in ~0.38s, followed by the final slide showing the repository, documentation PDFs, and submission archive.
+**Visual:** Running `python -m unittest discover -s tests -v`, showing 24/24 tests passing in ~0.38s, followed by the final slide showing the repository, documentation PDFs, and submission archive.
 
 **Spoken Narration:**
 > "Finally, software quality is guaranteed by our comprehensive test suite in `tests/`. 
 >
-> 23 automated unit and integration tests validate domain models, parameterized SQL injection defense, duplicate ID updates, database migration deduplication, NaN and Infinity rejection, column count mismatches, invalid status rejection, header-only CSV processing, and SQLite safe write permissions—running in under 0.4 seconds with all tests verified.
+> 24 automated unit and integration tests validate domain models, parameterized SQL injection defense, duplicate ID updates, database migration deduplication, NaN and Infinity rejection, column count mismatches, invalid status rejection, header-only CSV processing, and SQLite safe write permissions—running in under 0.4 seconds with all tests verified.
 >
 > All project deliverables—the complete Git repository, database file, Linux terminal logs, System Architecture Report PDF, Presentation Deck, and this walkthrough—are packaged and ready for deployment.
 >

@@ -127,13 +127,19 @@ su - "$TARGET_USER" -c "
 
     # Verify sqlite database actual write permission with trap cleanup ensuring no residual tables
     if [ -f data/sprints_learners.db ]; then
-        trap 'sqlite3 data/sprints_learners.db \"DROP TABLE IF EXISTS ${PROBE_TABLE};\" >/dev/null 2>&1 || true' EXIT
+        cleanup_probe() {
+            if ! sqlite3 data/sprints_learners.db \"DROP TABLE IF EXISTS ${PROBE_TABLE};\"; then
+                echo \"[WARNING] Emergency cleanup: Failed to drop probe table ${PROBE_TABLE}\" >&2
+            fi
+        }
+        trap cleanup_probe EXIT
         sqlite3 data/sprints_learners.db \"
             CREATE TABLE ${PROBE_TABLE} (id INTEGER PRIMARY KEY, ts TEXT);
             INSERT INTO ${PROBE_TABLE} (ts) VALUES (datetime('now'));
             DROP TABLE IF EXISTS ${PROBE_TABLE};
             PRAGMA integrity_check;
         \"
+        trap - EXIT
     fi
 "
 echo "[SUCCESS] Non-root operator '$TARGET_USER' successfully verified with full read/write access (Safe SQLite write transaction verified: ${PROBE_TABLE})."

@@ -4,6 +4,21 @@ All notable technical and architectural decisions for the **Learner Assessment &
 
 ---
 
+## [1.0.3] - 2026-11-03 (Partial Unique Index & Audit Resilience)
+
+### Database Architecture & Migration Safeguards
+- **Added:** Implemented Partial Unique Index `CREATE UNIQUE INDEX IF NOT EXISTS idx_audit_event_learner ON system_audit_log (event_type, learner_id) WHERE learner_id IS NOT NULL;` in `code/main.py`. This ensures multiple system-level audit events (`learner_id IS NULL`) can be recorded freely without collisions or constraint violations.
+- **Changed:** Refactored automated schema migration in `initialize_schema()` so deduplication operates strictly on rows `WHERE learner_id IS NOT NULL`. Independent system-level audit events (such as server startup, integrity checkpoints, and background backups) are guaranteed 100% data retention and never collapsed by `GROUP BY`.
+- **Added:** New automated unit test `test_migration_preserves_system_audit_events_with_null_learner_id` in `tests/test_ingestion.py`, expanding the verified test suite to 24 tests (24/24 passing).
+
+### Linux Administration Script Refinements
+- **Changed:** Eliminated `|| true` in `scripts/setup_linux_env.sh` probe table trap cleanup. Replaced with an explicit `cleanup_probe` error-reporting routine that outputs warnings to stderr upon failure and cleanly disarms via `trap - EXIT` after successful write validation.
+
+### Documentation & Deliverables Synchronization
+- **Updated:** Synchronized test suite metrics to 24 tests across `README.md`, `DEMO_SCRIPT.md`, `docs/PROJECT_CHARTER.md`, and recompiled both `docs/System_Architecture_Report.pdf` and `docs/Capstone_Presentation.pdf`.
+
+---
+
 ## [1.0.2] - 2026-11-03 (Precision Refinements & Rigor Polish)
 
 ### Core Ingestion & Telemetry Rigor

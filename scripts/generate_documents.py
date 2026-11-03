@@ -519,7 +519,7 @@ def generate_architecture_report_pdf(output_path: str):
         ["Linux Package & Permission Hardening", "COMPLETED", "logs/linux_operations.log (apt, chmod, chown, ps)"],
         ["Executive Presentation Deck", "COMPLETED", "docs/Capstone_Presentation.pdf"],
         ["Recorded Walkthrough Video", "COMPLETED", "Demo_Walkthrough.mp4 & DEMO_SCRIPT.md"],
-        ["Automated Test Suite (23 Tests)", "COMPLETED", "23/23 unit & integration tests passing in < 0.40s"],
+        ["Automated Test Suite (24 Tests)", "COMPLETED", "24/24 unit & integration tests passing in < 0.40s"],
     ]
     t_signoff = Table(signoff_data, colWidths=[160, 80, 264])
     t_signoff.setStyle(TableStyle([
@@ -852,7 +852,7 @@ def generate_presentation_deck_pdf(output_path: str):
     # Slide 9: Automated Test Suite & Validation
     # -------------------------------------------------------------------------
     test_points = [
-        Paragraph("• <b>Comprehensive Test Coverage (23/23 Tests Passed in < 0.40s):</b>", card_title_style),
+        Paragraph("• <b>Comprehensive Test Coverage (24/24 Tests Passed in < 0.40s):</b>", card_title_style),
         Paragraph("• <b>Schema & SQL Injection Defense:</b> Foreign keys enforced; SQL injection payloads safely neutralized.", slide_bullet),
         Paragraph("• <b>Mathematical & Edge Cases Resiliency:</b>", slide_bullet),
         Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;• <code>NaN & Infinity Defense</code>: Traps non-finite floats via <code>math.isfinite()</code> preventing database corruption.", slide_body),
@@ -865,7 +865,7 @@ def generate_presentation_deck_pdf(output_path: str):
     ]
     story.extend(make_slide(
         "8. Testing & Validation Matrix",
-        "23 Automated Unit & Integration Tests Passing",
+        "24 Automated Unit & Integration Tests Passing",
         test_points,
         9
     ))
@@ -881,7 +881,7 @@ def generate_presentation_deck_pdf(output_path: str):
         ["Sprint 2 - SQLite Database", "3NF relational DB, ON CONFLICT DO UPDATE, SQLi defense", "ACCEPTED (100% Complete)"],
         ["Sprint 2 - Error & Log Handling", "Fault-tolerant pipeline & application_activity.log", "ACCEPTED (100% Complete)"],
         ["Sprint 3 - Linux Operations", "apt-get sqlite3, Primary Group sprints_ops, chmod 750/660", "ACCEPTED (100% Complete)"],
-        ["Automated Test Suite", "23 Unit & Integration tests passing in < 0.40s", "VERIFIED (23/23 Passed)"],
+        ["Automated Test Suite", "24 Unit & Integration tests passing in < 0.40s", "VERIFIED (24/24 Passed)"],
         ["Capstone Deliverables", "Report PDF, Presentation PDF, Walkthrough Video & Repo", "READY FOR FINAL EVALUATION"],
     ]
     t_conc = Table(conc_data, colWidths=[170, 310, 232])
