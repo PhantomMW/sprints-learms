@@ -1,0 +1,50 @@
+name: LEARMS CI - Automated Test Suite & Operational Verification
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Automated Tests & Engine Verification
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install System Dependencies (SQLite3)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sqlite3 libsqlite3-dev
+          sqlite3 --version
+
+      - name: Verify Python & Shell Syntax
+        run: |
+          python -m py_compile code/*.py tests/*.py
+          bash -n scripts/*.sh
+
+      - name: Run 24 Unit & Integration Tests
+        env:
+          PYTHONPATH: "."
+        run: |
+          python -m unittest discover -s tests -p "test_*.py" -v
+
+      - name: Execute LEARMS Core Engine Verification
+        run: |
+          python code/main.py --verify
+
+      - name: Execute Process Telemetry Monitoring
+        run: |
+          bash scripts/monitor_process.sh

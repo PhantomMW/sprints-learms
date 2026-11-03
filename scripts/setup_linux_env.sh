@@ -140,9 +140,17 @@ su - "$TARGET_USER" -c "
             PRAGMA integrity_check;
         \"
         trap - EXIT
+        echo \"[VERIFICATION 4] Safe SQLite write transaction verified: ${PROBE_TABLE}\"
+    else
+        echo \"[NOTICE] Database file 'data/sprints_learners.db' not found. Functional SQLite write probe skipped.\" >&2
     fi
 "
-echo "[SUCCESS] Non-root operator '$TARGET_USER' successfully verified with full read/write access (Safe SQLite write transaction verified: ${PROBE_TABLE})."
+
+if [ -f "$APP_ROOT/data/sprints_learners.db" ]; then
+    echo "[SUCCESS] Non-root operator '$TARGET_USER' successfully verified with full read/write access (Safe SQLite write transaction verified: ${PROBE_TABLE})."
+else
+    echo "[WARNING] SQLite write transaction was SKIPPED because 'data/sprints_learners.db' does not exist yet. File and log permissions verified for '$TARGET_USER'."
+fi
 echo "================================================================="
 echo "   LINUX ENVIRONMENT SETUP & SECURITY PROVISIONING COMPLETE      "
 echo "================================================================="
